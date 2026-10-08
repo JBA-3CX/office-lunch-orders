@@ -1,4 +1,3 @@
-// Global Variables & Fallback Menu
 const DEFAULT_MENU = [
   { id: 1, category: "Sandwiches", name: "#1 Special (Mortatella, salami, ham, sausage)", basePrice: 4.00, hasDouble: true },
   { id: 2, category: "Sandwiches", name: "#2 Turbo (Roast pork, haloumi, lountza, sausage)", basePrice: 4.00, hasDouble: true },
@@ -35,42 +34,27 @@ let editingOrderKey = null;
 let isLocked = false;
 let adminPIN = "1234";
 let panzoomInstance = null;
-let db = null; // Defined here, connected safely later
+let db = null; 
+
+// Initial Timer Target
 let cutoffDate = new Date();
-
-// 1. BOOTSTRAP APP IMMEDIATELY
-function initApp() {
-  try {
-    // Ensure countdown targets the future
-    if (new Date().getHours() > 11 || (new Date().getHours() === 11 && new Date().getMinutes() >= 30)) {
-      cutoffDate.setDate(cutoffDate.getDate() + 1);
-    }
-    cutoffDate.setHours(11, 30, 0, 0);
-
-    const overlay = document.getElementById('form-locked-overlay');
-    if (overlay) overlay.classList.add('hidden');
-
-    populateMenuSelect();
-    handleItemSelectChange();
-    startCountdownTimer();
-    
-    // Connect to Firebase as the last step
-    initFirebase();
-  } catch (err) {
-    console.error("Critical Application UI Error:", err);
-  }
+if (new Date().getHours() > 11 || (new Date().getHours() === 11 && new Date().getMinutes() >= 30)) {
+  cutoffDate.setDate(cutoffDate.getDate() + 1); 
 }
+cutoffDate.setHours(11, 30, 0, 0);
 
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initApp);
-} else {
-  initApp();
-}
+// --- 1. INSTANT LOCAL UI RENDER (0ms Delay) ---
+document.getElementById('form-locked-overlay').classList.add('hidden');
+populateMenuSelect();
+handleItemSelectChange();
+startCountdownTimer();
+connectFirebase();
 
-// 2. SAFE FIREBASE INITIALIZATION
-function initFirebase() {
-  if (typeof firebase === 'undefined') {
-    console.warn("Firebase SDK blocked or not loaded. Running in local mode.");
+// --- 2. BACKGROUND FIREBASE CONNECTION ---
+function connectFirebase() {
+  if (typeof firebase === 'undefined' || typeof firebase.initializeApp === 'undefined') {
+    // Keep checking every 50ms until the background deferred scripts finish downloading
+    setTimeout(connectFirebase, 50);
     return;
   }
   
@@ -89,7 +73,6 @@ function initFirebase() {
     }
     db = firebase.database();
     
-    // Listeners
     db.ref('orders').on('value', (snapshot) => {
       ordersMap = snapshot.val() || {};
       renderOrders();
@@ -113,11 +96,11 @@ function initFirebase() {
       renderAdminMenuList();
     });
   } catch (err) {
-    console.error("Firebase connection failed:", err);
+    console.error("Firebase connection error", err);
   }
 }
 
-// 3. UI FUNCTIONS
+// --- 3. UI FUNCTIONS ---
 function populateMenuSelect() {
   const select = document.getElementById('item-select');
   if (!select) return;
@@ -149,7 +132,6 @@ function handleItemSelectChange() {
 
   const sizeContainer = document.getElementById('size-container');
   const sizeSelect = document.getElementById('size-select');
-
   sizeSelect.innerHTML = '';
 
   if (item.isFries) {
@@ -323,6 +305,9 @@ function submitFinalOrder() {
     } else {
       db.ref('orders').push(updatedOrder);
     }
+  } else {
+    alert("Connection to server still loading. Please try submitting again in 1 second.");
+    return;
   }
 
   currentCart = [];
@@ -341,6 +326,7 @@ function submitFinalOrder() {
       submitBtn.innerHTML = originalHTML;
       submitBtn.className = originalClasses;
       submitBtn.disabled = false;
+      document.getElementById('user-name').value = '';
     }, 3000);
   }
 }
@@ -514,8 +500,6 @@ function startCountdownTimer() {
     const secs = Math.floor((diff % (1000 * 60)) / 1000).toString().padStart(2, '0');
 
     document.getElementById('timer-display').textContent = `${hrs}:${mins}:${secs}`;
-    document.getElementById('form-locked-overlay').classList.add('hidden');
-    isLocked = false;
   }, 1000);
 }
 
@@ -532,7 +516,6 @@ function openLightbox() {
       contain: 'outside',
       cursor: 'grab'
     });
-
     elem.parentElement.addEventListener('wheel', panzoomInstance.zoomWithWheel);
   } else if (panzoomInstance) {
     panzoomInstance.reset();
@@ -711,7 +694,7 @@ function copyPhoneScript() {
   }
 }
 
-// Global scope bindings
+// BIND ALL FUNCTIONS TO GLOBAL WINDOW OBJECT
 window.handleItemSelectChange = handleItemSelectChange;
 window.updateItemPricePreview = updateItemPricePreview;
 window.adjustQty = adjustQty;

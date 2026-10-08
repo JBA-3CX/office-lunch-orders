@@ -325,7 +325,7 @@ function renderPhoneView() {
 
   Object.values(groupedMap).forEach(group => {
     const card = document.createElement('div');
-    card.className = "p-3 bg-slate-900/80 border border-slate-700/80 rounded-xl space-y-1";
+    card.className = "phone-item p-3 bg-slate-900/80 border border-slate-700/80 rounded-xl space-y-1";
 
     let lineText = `<span class="font-bold text-sm text-slate-100">${group.totalQty}x ${group.itemName} (${group.size})</span>`;
 
@@ -344,7 +344,7 @@ function renderPhoneView() {
         <label class="flex items-start gap-2.5 cursor-pointer">
           <input type="checkbox" class="w-4 h-4 text-amber-500 bg-slate-800 border-slate-700 rounded focus:ring-0 accent-amber-500 mt-0.5">
           <div>
-            <div>${lineText}</div>
+            <div class="order-line-text">${lineText}</div>
             <div class="text-[11px] text-slate-400 mt-0.5">For: ${peopleList}</div>
           </div>
         </label>
@@ -580,10 +580,20 @@ function clearAllOrders() {
 
 function copyPhoneScript() {
   let script = "Aphrodite's Snacks Order:\n\n";
-  const checklist = document.querySelectorAll('#phone-checklist .p-3');
-  checklist.forEach(card => {
-    const title = card.querySelector('span').textContent;
-    script += `• ${title}\n`;
+  const items = document.querySelectorAll('#phone-checklist .phone-item');
+  items.forEach(card => {
+    const textEl = card.querySelector('.order-line-text');
+    if (textEl) {
+      script += `• ${textEl.textContent.trim()}\n`;
+    }
   });
+
   navigator.clipboard.writeText(script);
+
+  const copyBtn = document.querySelector("button[onclick='copyPhoneScript()']");
+  if (copyBtn) {
+    const origHTML = copyBtn.innerHTML;
+    copyBtn.innerHTML = `<i class="fa-solid fa-check text-emerald-400"></i> Copied!`;
+    setTimeout(() => { copyBtn.innerHTML = origHTML; }, 2000);
+  }
 }

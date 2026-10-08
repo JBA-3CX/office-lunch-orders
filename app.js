@@ -46,6 +46,7 @@ const DEFAULT_MENU = [
 let menu = DEFAULT_MENU;
 let ordersMap = {};
 let currentCart = [];
+let editingOrderKey = null; // Tracks order key when updating existing submission
 let isLocked = false;
 let adminPIN = "1234";
 let panzoomInstance = null;
@@ -54,12 +55,9 @@ let cutoffDate = new Date();
 cutoffDate.setHours(11, 30, 0, 0);
 
 window.addEventListener('DOMContentLoaded', () => {
-  // Render INSTANTLY from local memory
   populateMenuSelect();
   handleItemSelectChange();
   startCountdownTimer();
-
-  // Sync with cloud in background
   initFirebaseListeners();
 });
 
@@ -228,6 +226,27 @@ function removeFromCart(index) {
   renderCart();
 }
 
+function editSubmittedOrder(key) {
+  const order = ordersMap[key];
+  if (!order) return;
+
+  editingOrderKey = key;
+  document.getElementById('user-name').value = order.person || '';
+  currentCart = order.items ? JSON.parse(JSON.stringify(order.items)) : [];
+  renderCart();
+
+  // Scroll to form view smoothly
+  document.getElementById('user-name').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  document.getElementById('user-name').focus();
+
+  // Update submit button style & text to indicate editing mode
+  const submitBtn = document.querySelector("button[onclick='submitFinalOrder()']");
+  if (submitBtn) {
+    submitBtn.innerHTML = `<i class="fa-solid fa-pen-to-square"></i> Update Saved Order`;
+    submitBtn.className = "w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold py-3.5 px-4 rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-base";
+  }
+}
+
 function submitFinalOrder() {
   const nameInput = document.getElementById('user-name');
   const userName = nameInput.value.trim();
@@ -247,21 +266,28 @@ function submitFinalOrder() {
     return;
   }
 
-  const newOrder = {
+  const updatedOrder = {
     person: userName,
     items: [...currentCart],
     timestamp: Date.now()
   };
 
-  db.ref('orders').push(newOrder);
+  if (editingOrderKey) {
+    // Overwrite existing order in Firebase
+    db.ref(`orders/${editingOrderKey}`).set(updatedOrder);
+    editingOrderKey = null;
+  } else {
+    // New submission
+    db.ref('orders').push(updatedOrder);
+  }
 
   currentCart = [];
   renderCart();
 
   const submitBtn = document.querySelector("button[onclick='submitFinalOrder()']");
   if (submitBtn) {
-    const originalHTML = submitBtn.innerHTML;
-    const originalClasses = submitBtn.className;
+    const originalHTML = `<i class="fa-solid fa-paper-plane"></i> Submit Final Order`;
+    const originalClasses = "w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold py-3.5 px-4 rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-base";
 
     submitBtn.innerHTML = `<i class="fa-solid fa-circle-check"></i> Submitted!`;
     submitBtn.className = "w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-extrabold py-3.5 px-4 rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-base";
@@ -389,7 +415,8 @@ function renderDistributionView() {
         <span class="font-bold text-sm text-slate-100">${order.person}</span>
         <div class="flex items-center gap-2">
           <span class="font-bold text-xs text-emerald-400">€${orderTotal.toFixed(2)}</span>
-          <button onclick="deleteOrder('${key}')" class="text-slate-500 hover:text-red-400 text-xs"><i class="fa-solid fa-trash"></i></button>
+          <button onclick="editSubmittedOrder('${key}')" title="Edit Order" class="text-slate-400 hover:text-amber-400 text-xs px-1"><i class="fa-solid fa-pen"></i></button>
+          <button onclick="deleteOrder('${key}')" title="Delete Order" class="text-slate-500 hover:text-red-400 text-xs px-1"><i class="fa-solid fa-trash"></i></button>
         </div>
       </div>
       <div class="space-y-1">${itemsHtml}</div>
@@ -401,6 +428,9 @@ function renderDistributionView() {
 function deleteOrder(key) {
   if (confirm("Remove this order?")) {
     db.ref(`orders/${key}`).remove();
+    if (editingOrderKey === key) {
+      editingOrderKey = null;
+    }
   }
 }
 
@@ -443,7 +473,6 @@ function startCountdownTimer() {
   }, 1000);
 }
 
-// Lightbox with Panzoom Functions
 function openLightbox() {
   const modal = document.getElementById('lightbox-modal');
   const elem = document.getElementById('panzoom-element');

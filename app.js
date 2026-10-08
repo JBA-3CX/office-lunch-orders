@@ -1,3 +1,21 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getDatabase, ref, set, onValue, push, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+// Firebase Configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyDsqwJNqVHp7moMHka8dT0xllkEYioa2hg",
+  authDomain: "office-lunch-orders.firebaseapp.com",
+  databaseURL: "https://office-lunch-orders-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "office-lunch-orders",
+  storageBucket: "office-lunch-orders.firebasestorage.app",
+  messagingSenderId: "186331905102",
+  appId: "1:186331905102:web:b876c0fb394d4c36ad971f",
+  measurementId: "G-VGZV5SSE6Z"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
 const DEFAULT_MENU = [
   { id: 1, category: "Sandwiches", name: "#1 Special (Mortatella, salami, ham, sausage)", basePrice: 4.00, hasDouble: true },
   { id: 2, category: "Sandwiches", name: "#2 Turbo (Roast pork, haloumi, lountza, sausage)", basePrice: 4.00, hasDouble: true },
@@ -36,27 +54,23 @@ let adminPIN = "1234";
 let cutoffDate = new Date();
 cutoffDate.setHours(11, 30, 0, 0);
 
-window.onload = function() {
-  setTimeout(() => {
-    initFirebaseListeners();
-    populateMenuSelect();
-    handleItemSelectChange();
-    startCountdownTimer();
-  }, 300);
-};
+window.addEventListener('DOMContentLoaded', () => {
+  initFirebaseListeners();
+  populateMenuSelect();
+  handleItemSelectChange();
+  startCountdownTimer();
+});
 
 function initFirebaseListeners() {
-  if (!window.db) return;
-
-  const ordersRef = window.dbRef(window.db, 'orders');
-  window.dbOnValue(ordersRef, (snapshot) => {
+  const ordersRef = ref(db, 'orders');
+  onValue(ordersRef, (snapshot) => {
     const data = snapshot.val();
     ordersMap = data || {};
     renderOrders();
   });
 
-  const menuRef = window.dbRef(window.db, 'menu');
-  window.dbOnValue(menuRef, (snapshot) => {
+  const menuRef = ref(db, 'menu');
+  onValue(menuRef, (snapshot) => {
     const data = snapshot.val();
     if (data) {
       menu = Object.values(data);
@@ -131,11 +145,9 @@ function adjustQty(delta) {
 
 function updateItemPricePreview() {
   const sizeSelect = document.getElementById('size-select');
-  if (!sizeSelect || !sizeSelect.options[sizeSelect.selectedIndex]) return;
-  
   const selectedOption = sizeSelect.options[sizeSelect.selectedIndex];
-  const basePrice = parseFloat(selectedOption.getAttribute('data-price') || 0);
-  const qty = parseInt(document.getElementById('item-qty').value) || 1;
+  const basePrice = parseFloat(selectedOption ? selectedOption.getAttribute('data-price') : 0);
+  const qty = parseInt(document.getElementById('item-qty').value);
 
   const extras = document.querySelectorAll('input[name="extra"]:checked');
   const extrasCost = extras.length * 0.50;
@@ -144,26 +156,22 @@ function updateItemPricePreview() {
   document.getElementById('item-price-preview').textContent = '€' + itemTotal.toFixed(2);
 }
 
-function getCurrentFormItem() {
-  const itemSelect = document.getElementById('item-select');
-  if (!itemSelect || !itemSelect.value) return null;
-
-  const itemId = parseInt(itemSelect.value);
+function addToCart() {
+  const itemId = parseInt(document.getElementById('item-select').value);
   const item = menu.find(m => m.id === itemId);
-  if (!item) return null;
+  if (!item) return;
 
   const sizeSelect = document.getElementById('size-select');
-  const selectedOption = sizeSelect.options[sizeSelect.selectedIndex];
   const selectedSize = sizeSelect.value;
-  const basePrice = parseFloat(selectedOption ? selectedOption.getAttribute('data-price') : item.basePrice);
-  const qty = parseInt(document.getElementById('item-qty').value) || 1;
-
+  const basePrice = parseFloat(sizeSelect.options[sizeSelect.selectedIndex].getAttribute('data-price'));
+  const qty = parseInt(document.getElementById('item-qty').value);
+  
   const selectedExtras = Array.from(document.querySelectorAll('input[name="extra"]:checked')).map(cb => cb.value);
   const comment = document.getElementById('item-comment').value.trim();
 
   const itemTotal = (basePrice + (selectedExtras.length * 0.50)) * qty;
 
-  return {
+  currentCart.push({
     itemId,
     itemName: item.name,
     size: selectedSize,
@@ -171,16 +179,8 @@ function getCurrentFormItem() {
     extras: selectedExtras,
     comment,
     totalPrice: itemTotal
-  };
-}
+  });
 
-function addToCart() {
-  const item = getCurrentFormItem();
-  if (!item) return;
-
-  currentCart.push(item);
-
-  // Reset form inputs after adding item to cart
   document.getElementById('item-comment').value = '';
   document.querySelectorAll('input[name="extra"]').forEach(cb => cb.checked = false);
   document.getElementById('item-qty').value = 1;
@@ -240,41 +240,27 @@ function submitFinalOrder() {
     return;
   }
 
-  // If cart is empty, construct order directly from current selection form
-  let itemsToSubmit = [...currentCart];
-  if (itemsToSubmit.length === 0) {
-    const currentFormItem = getCurrentFormItem();
-    if (currentFormItem) {
-      itemsToSubmit.push(currentFormItem);
-    }
+  // Auto-add current selection if cart is empty
+  if (currentCart.length === 0) {
+    addToCart();
   }
 
-  if (itemsToSubmit.length === 0) {
+  if (currentCart.length === 0) {
     return;
   }
 
   const newOrder = {
     person: userName,
-    items: itemsToSubmit,
+    items: [...currentCart],
     timestamp: Date.now()
   };
 
-  // Immediate local update fallback so screen refreshes instantly
-  const localKey = 'temp_' + Date.now();
-  ordersMap[localKey] = newOrder;
-  renderOrders();
+  // Push directly to Firebase Realtime DB
+  const ordersRef = ref(db, 'orders');
+  push(ordersRef, newOrder);
 
-  // Push to Firebase Realtime Database
-  if (window.db) {
-    const ordersRef = window.dbRef(window.db, 'orders');
-    window.dbPush(ordersRef, newOrder);
-  }
-
-  // Clear staged cart and form comment
   currentCart = [];
   renderCart();
-  document.getElementById('item-comment').value = '';
-  document.querySelectorAll('input[name="extra"]').forEach(cb => cb.checked = false);
 
   // Visual button feedback
   const submitBtn = document.querySelector("button[onclick='submitFinalOrder()']");
@@ -419,12 +405,8 @@ function renderDistributionView() {
 
 function deleteOrder(key) {
   if (confirm("Remove this order?")) {
-    delete ordersMap[key];
-    renderOrders();
-    if (window.db && !key.startsWith('temp_')) {
-      const itemRef = window.dbRef(window.db, `orders/${key}`);
-      window.dbRemove(itemRef);
-    }
+    const itemRef = ref(db, `orders/${key}`);
+    remove(itemRef);
   }
 }
 
@@ -525,9 +507,7 @@ function saveAdminMenuItem() {
   const hasDouble = document.getElementById('admin-has-double').checked;
   const isFries = document.getElementById('admin-is-fries').checked;
 
-  if (!name || isNaN(basePrice)) {
-    return;
-  }
+  if (!name || isNaN(basePrice)) return;
 
   if (editId) {
     const item = menu.find(m => m.id === parseInt(editId));
@@ -539,10 +519,8 @@ function saveAdminMenuItem() {
     menu.push({ id: Date.now(), category, name, basePrice, hasDouble, isFries });
   }
 
-  if (window.db) {
-    const menuRef = window.dbRef(window.db, 'menu');
-    window.dbSet(menuRef, menu);
-  }
+  const menuRef = ref(db, 'menu');
+  set(menuRef, menu);
 
   populateMenuSelect();
   handleItemSelectChange();
@@ -553,10 +531,9 @@ function saveAdminMenuItem() {
 function deleteAdminMenuItem(id) {
   if (confirm("Delete this menu item?")) {
     menu = menu.filter(m => m.id !== id);
-    if (window.db) {
-      const menuRef = window.dbRef(window.db, 'menu');
-      window.dbSet(menuRef, menu);
-    }
+    const menuRef = ref(db, 'menu');
+    set(menuRef, menu);
+
     populateMenuSelect();
     handleItemSelectChange();
     renderAdminMenuList();
@@ -575,10 +552,9 @@ function resetAdminMenuForm() {
 function resetMenuToDefault() {
   if (confirm("Reset menu items back to default?")) {
     menu = [...DEFAULT_MENU];
-    if (window.db) {
-      const menuRef = window.dbRef(window.db, 'menu');
-      window.dbSet(menuRef, menu);
-    }
+    const menuRef = ref(db, 'menu');
+    set(menuRef, menu);
+
     populateMenuSelect();
     handleItemSelectChange();
     renderAdminMenuList();
@@ -607,12 +583,8 @@ function toggleFormLock() {
 
 function clearAllOrders() {
   if (confirm("Are you sure you want to clear all orders?")) {
-    ordersMap = {};
-    renderOrders();
-    if (window.db) {
-      const ordersRef = window.dbRef(window.db, 'orders');
-      window.dbSet(ordersRef, null);
-    }
+    const ordersRef = ref(db, 'orders');
+    set(ordersRef, null);
     closeAdminModal();
   }
 }
@@ -621,15 +593,16 @@ function copyPhoneScript() {
   let script = "Aphrodite's Snacks Order:\n\n";
   const checklist = document.querySelectorAll('#phone-checklist .p-3');
   checklist.forEach(card => {
-    const titleText = card.querySelector('div')?.innerText || '';
-    if (titleText) script += `• ${titleText}\n`;
+    const title = card.querySelector('span').textContent;
+    script += `• ${title}\n`;
   });
   navigator.clipboard.writeText(script);
 }
 
+// Bind functions to window scope for inline HTML onclick handlers
 window.handleItemSelectChange = handleItemSelectChange;
-window.adjustQty = adjustQty;
 window.updateItemPricePreview = updateItemPricePreview;
+window.adjustQty = adjustQty;
 window.addToCart = addToCart;
 window.removeFromCart = removeFromCart;
 window.submitFinalOrder = submitFinalOrder;
@@ -640,8 +613,8 @@ window.closeLightbox = closeLightbox;
 window.openAdminModal = openAdminModal;
 window.closeAdminModal = closeAdminModal;
 window.verifyAdminPIN = verifyAdminPIN;
-window.editAdminMenuItem = editAdminMenuItem;
 window.saveAdminMenuItem = saveAdminMenuItem;
+window.editAdminMenuItem = editAdminMenuItem;
 window.deleteAdminMenuItem = deleteAdminMenuItem;
 window.resetAdminMenuForm = resetAdminMenuForm;
 window.resetMenuToDefault = resetMenuToDefault;

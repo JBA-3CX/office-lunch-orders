@@ -1,3 +1,15 @@
+// Firebase Configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyDsqwJNqVHp7moMHka8dT0xllkEYioa2hg",
+  authDomain: "office-lunch-orders.firebaseapp.com",
+  databaseURL: "https://office-lunch-orders-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "office-lunch-orders",
+  storageBucket: "office-lunch-orders.firebasestorage.app",
+  messagingSenderId: "186331905102",
+  appId: "1:186331905102:web:b876c0fb394d4c36ad971f",
+  measurementId: "G-VGZV5SSE6Z"
+};
+
 const DEFAULT_MENU = [
   { id: 1, category: "Sandwiches", name: "#1 Special (Mortatella, salami, ham, sausage)", basePrice: 4.00, hasDouble: true },
   { id: 2, category: "Sandwiches", name: "#2 Turbo (Roast pork, haloumi, lountza, sausage)", basePrice: 4.00, hasDouble: true },
@@ -29,6 +41,7 @@ const DEFAULT_MENU = [
 
 let menu = [...DEFAULT_MENU];
 let ordersMap = {};
+let historyMap = {};
 let currentCart = [];
 let editingOrderKey = null;
 let isLocked = false;
@@ -36,46 +49,71 @@ let adminPIN = "1234";
 let panzoomInstance = null;
 let db = null; 
 
-// Initial Timer Target
+let globalConfig = { activeDate: '', cutoffTime: '10:00' };
 let cutoffDate = new Date();
-if (new Date().getHours() > 11 || (new Date().getHours() === 11 && new Date().getMinutes() >= 30)) {
-  cutoffDate.setDate(cutoffDate.getDate() + 1); 
+cutoffDate.setHours(10, 0, 0, 0);
+
+function getLocalTodayString() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
-cutoffDate.setHours(11, 30, 0, 0);
 
-// --- 1. INSTANT LOCAL UI RENDER (0ms Delay) ---
-document.getElementById('form-locked-overlay').classList.add('hidden');
-populateMenuSelect();
-handleItemSelectChange();
-startCountdownTimer();
-connectFirebase();
+function initApp() {
+  try {
+    if (new Date().getHours() > 11 || (new Date().getHours() === 11 && new Date().getMinutes() >= 30)) {
+      cutoffDate.setDate(cutoffDate.getDate() + 1);
+    }
+    cutoffDate.setHours(11, 30, 0, 0);
 
-// --- 2. BACKGROUND FIREBASE CONNECTION ---
+    const overlay = document.getElementById('form-locked-overlay');
+    if (overlay) overlay.classList.add('hidden');
+
+    populateMenuSelect();
+    handleItemSelectChange();
+    startCountdownTimer();
+    connectFirebase();
+  } catch (err) {
+    console.error("Critical Application UI Error:", err);
+  }
+}
+
 function connectFirebase() {
   if (typeof firebase === 'undefined' || typeof firebase.initializeApp === 'undefined') {
-    // Keep checking every 50ms until the background deferred scripts finish downloading
     setTimeout(connectFirebase, 50);
     return;
   }
   
   try {
-    if (!firebase.apps.length) {
-      firebase.initializeApp({
-        apiKey: "AIzaSyDsqwJNqVHp7moMHka8dT0xllkEYioa2hg",
-        authDomain: "office-lunch-orders.firebaseapp.com",
-        databaseURL: "https://office-lunch-orders-default-rtdb.europe-west1.firebasedatabase.app",
-        projectId: "office-lunch-orders",
-        storageBucket: "office-lunch-orders.firebasestorage.app",
-        messagingSenderId: "186331905102",
-        appId: "1:186331905102:web:b876c0fb394d4c36ad971f",
-        measurementId: "G-VGZV5SSE6Z"
-      });
-    }
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     db = firebase.database();
     
+    db.ref('config').on('value', (snapshot) => {
+      let conf = snapshot.val();
+      const today = getLocalTodayString();
+
+      if (!conf || !conf.activeDate) {
+        conf = { activeDate: today, cutoffTime: '10:00' };
+        db.ref('config').set(conf);
+      } else if (conf.activeDate !== today) {
+        doDailyResetAndArchive(conf.activeDate, today);
+        return; 
+      }
+
+      globalConfig = conf;
+      updateLocalTimerTarget();
+      if (document.getElementById('cutoff-time-input')) {
+        document.getElementById('cutoff-time-input').value = globalConfig.cutoffTime;
+      }
+    });
+
     db.ref('orders').on('value', (snapshot) => {
       ordersMap = snapshot.val() || {};
       renderOrders();
+    });
+
+    db.ref('history').on('value', (snapshot) => {
+      historyMap = snapshot.val() || {};
+      renderAdminHistory();
     });
 
     db.ref('menu').on('value', (snapshot) => {
@@ -100,10 +138,29 @@ function connectFirebase() {
   }
 }
 
-// --- 3. UI FUNCTIONS ---
+function doDailyResetAndArchive(oldDate, newDate) {
+  db.ref('orders').once('value').then((snap) => {
+    const oldOrders = snap.val();
+    if (oldOrders) {
+      db.ref(`history/${oldDate}`).set(oldOrders);
+    }
+    db.ref('orders').set(null);
+    db.ref('config').set({ activeDate: newDate, cutoffTime: '10:00' });
+  });
+}
+
+function updateLocalTimerTarget() {
+  const [h, m] = globalConfig.cutoffTime.split(':');
+  cutoffDate = new Date();
+  cutoffDate.setHours(parseInt(h), parseInt(m), 0, 0);
+}
+
 function populateMenuSelect() {
   const select = document.getElementById('item-select');
   if (!select) return;
+  
+  // Save current selection to prevent resetting if user is mid-click
+  const currentVal = select.value;
   select.innerHTML = '';
   
   let currentCat = '';
@@ -120,6 +177,8 @@ function populateMenuSelect() {
     option.textContent = item.name;
     select.appendChild(option);
   });
+  
+  if (currentVal) select.value = currentVal;
 }
 
 function handleItemSelectChange() {
@@ -488,9 +547,15 @@ function startCountdownTimer() {
     const now = new Date();
     const diff = cutoffDate - now;
 
+    const displayElem = document.getElementById('timer-display');
+    const displayHeader = document.getElementById('cutoff-time-display');
+    const overlay = document.getElementById('form-locked-overlay');
+
+    if (displayHeader) displayHeader.textContent = globalConfig.cutoffTime;
+
     if (diff <= 0) {
-      document.getElementById('timer-display').textContent = "00:00:00";
-      document.getElementById('form-locked-overlay').classList.remove('hidden');
+      if (displayElem) displayElem.textContent = "00:00:00";
+      if (overlay) overlay.classList.remove('hidden');
       isLocked = true;
       return;
     }
@@ -499,56 +564,41 @@ function startCountdownTimer() {
     const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
     const secs = Math.floor((diff % (1000 * 60)) / 1000).toString().padStart(2, '0');
 
-    document.getElementById('timer-display').textContent = `${hrs}:${mins}:${secs}`;
+    if (displayElem) displayElem.textContent = `${hrs}:${mins}:${secs}`;
+    if (overlay) overlay.classList.add('hidden');
+    isLocked = false;
   }, 1000);
 }
 
 function openLightbox() {
   const modal = document.getElementById('lightbox-modal');
   const elem = document.getElementById('panzoom-element');
-  
   modal.classList.remove('hidden');
 
   if (!panzoomInstance && elem && window.Panzoom) {
-    panzoomInstance = Panzoom(elem, {
-      maxScale: 5,
-      minScale: 1,
-      step: 0.3,
-      cursor: 'grab'
-    });
-    // Add wheel zoom to the parent container
+    panzoomInstance = Panzoom(elem, { maxScale: 4, minScale: 1, contain: 'outside', cursor: 'grab' });
     elem.parentElement.addEventListener('wheel', panzoomInstance.zoomWithWheel);
   } else if (panzoomInstance) {
     panzoomInstance.reset();
   }
 }
-
 function closeLightbox() {
   document.getElementById('lightbox-modal').classList.add('hidden');
   if (panzoomInstance) panzoomInstance.reset();
 }
-
-function zoomInLightbox() {
-  if (panzoomInstance) panzoomInstance.zoomIn();
-}
-
-function zoomOutLightbox() {
-  if (panzoomInstance) panzoomInstance.zoomOut();
-}
-
-function resetZoomLightbox() {
-  if (panzoomInstance) panzoomInstance.reset();
-}
+function zoomInLightbox() { if (panzoomInstance) panzoomInstance.zoomIn(); }
+function zoomOutLightbox() { if (panzoomInstance) panzoomInstance.zoomOut(); }
+function resetZoomLightbox() { if (panzoomInstance) panzoomInstance.reset(); }
 
 function openAdminModal() { document.getElementById('admin-modal').classList.remove('hidden'); }
 function closeAdminModal() { document.getElementById('admin-modal').classList.add('hidden'); }
 
 function verifyAdminPIN() {
-  const pin = document.getElementById('admin-pin-input').value;
-  if (pin === adminPIN) {
+  if (document.getElementById('admin-pin-input').value === adminPIN) {
     document.getElementById('admin-auth-section').classList.add('hidden');
     document.getElementById('admin-panel-section').classList.remove('hidden');
     renderAdminMenuList();
+    renderAdminHistory();
   } else {
     alert("Incorrect PIN");
   }
@@ -577,7 +627,6 @@ function renderAdminMenuList() {
     container.appendChild(div);
   });
 }
-
 function editAdminMenuItem(id) {
   const item = menu.find(m => m && m.id === id);
   if (!item) return;
@@ -588,7 +637,6 @@ function editAdminMenuItem(id) {
   document.getElementById('admin-has-double').checked = !!item.hasDouble;
   document.getElementById('admin-is-fries').checked = !!item.isFries;
 }
-
 function saveAdminMenuItem() {
   const editId = document.getElementById('edit-item-id').value;
   const category = document.getElementById('admin-item-cat').value.trim() || 'General';
@@ -598,7 +646,6 @@ function saveAdminMenuItem() {
   const isFries = document.getElementById('admin-is-fries').checked;
 
   if (!name || isNaN(basePrice)) return;
-
   if (editId) {
     const item = menu.find(m => m && m.id === parseInt(editId));
     if (item) {
@@ -608,26 +655,15 @@ function saveAdminMenuItem() {
   } else {
     menu.push({ id: Date.now(), category, name, basePrice, hasDouble, isFries });
   }
-
   if (db) db.ref('menu').set(menu);
-
-  populateMenuSelect();
-  handleItemSelectChange();
-  renderAdminMenuList();
   resetAdminMenuForm();
 }
-
 function deleteAdminMenuItem(id) {
   if (confirm("Delete this menu item?")) {
     menu = menu.filter(m => m && m.id !== id);
     if (db) db.ref('menu').set(menu);
-
-    populateMenuSelect();
-    handleItemSelectChange();
-    renderAdminMenuList();
   }
 }
-
 function resetAdminMenuForm() {
   document.getElementById('edit-item-id').value = '';
   document.getElementById('admin-item-cat').value = '';
@@ -636,31 +672,19 @@ function resetAdminMenuForm() {
   document.getElementById('admin-has-double').checked = false;
   document.getElementById('admin-is-fries').checked = false;
 }
-
 function resetMenuToDefault() {
   if (confirm("Reset menu items back to default?")) {
     menu = [...DEFAULT_MENU];
     if (db) db.ref('menu').set(menu);
-
-    populateMenuSelect();
-    handleItemSelectChange();
-    renderAdminMenuList();
   }
 }
 
 function updateCutoffTime() {
   const val = document.getElementById('cutoff-time-input').value;
   if (!val) return;
-  const [h, m] = val.split(':');
-  cutoffDate.setHours(parseInt(h), parseInt(m), 0, 0);
-  document.getElementById('cutoff-time-display').textContent = cutoffDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  document.getElementById('form-locked-overlay').classList.add('hidden');
-}
-
-function addTimerMinutes(mins) {
-  cutoffDate = new Date(Date.now() + mins * 60000);
-  document.getElementById('cutoff-time-display').textContent = cutoffDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  document.getElementById('form-locked-overlay').classList.add('hidden');
+  if (db) {
+    db.ref('config/cutoffTime').set(val); 
+  }
 }
 
 function toggleFormLock() {
@@ -675,6 +699,55 @@ function clearAllOrders() {
   }
 }
 
+function renderAdminHistory() {
+  const container = document.getElementById('admin-history-list');
+  if (!container) return;
+  container.innerHTML = '';
+  
+  const dates = Object.keys(historyMap).sort().reverse(); 
+  if (dates.length === 0) {
+    container.innerHTML = `<div class="text-slate-500 py-2">No archived orders yet.</div>`;
+    return;
+  }
+
+  dates.forEach(date => {
+    const orders = historyMap[date];
+    const orderCount = Object.keys(orders).length;
+    const div = document.createElement('div');
+    div.className = "flex justify-between items-center bg-slate-800 p-2 rounded border border-slate-700";
+    div.innerHTML = `
+      <div><span class="font-bold text-slate-200">${date}</span> <span class="text-slate-400 ml-2">(${orderCount} people)</span></div>
+      <div class="flex gap-2">
+        <button onclick="viewHistory('${date}')" class="text-slate-400 hover:text-amber-400 px-1"><i class="fa-solid fa-eye"></i></button>
+        <button onclick="deleteHistory('${date}')" class="text-slate-400 hover:text-red-400 px-1"><i class="fa-solid fa-trash"></i></button>
+      </div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function viewHistory(date) {
+  const orders = historyMap[date];
+  let text = `--- Archived Orders for ${date} ---\n\n`;
+  Object.values(orders).forEach(o => {
+      text += `👤 ${o.person}:\n`;
+      o.items.forEach(i => {
+          text += `   - ${i.qty}x ${i.itemName}`;
+          if (i.extras && i.extras.length) text += ` (+${i.extras.join(', ')})`;
+          if (i.comment) text += ` (${i.comment})`;
+          text += `\n`;
+      });
+      text += '\n';
+  });
+  alert(text);
+}
+
+function deleteHistory(date) {
+  if (confirm(`Permanently delete the order history for ${date}?`)) {
+    if (db) db.ref(`history/${date}`).remove();
+  }
+}
+
 function copyPhoneScript() {
   let script = "Aphrodite's Snacks Order:\n\n";
   const items = document.querySelectorAll('#phone-checklist .phone-item');
@@ -684,9 +757,7 @@ function copyPhoneScript() {
       script += `• ${textEl.textContent.trim()}\n`;
     }
   });
-
   navigator.clipboard.writeText(script);
-
   const copyBtn = document.querySelector("button[onclick='copyPhoneScript()']");
   if (copyBtn) {
     const origHTML = copyBtn.innerHTML;
@@ -695,7 +766,9 @@ function copyPhoneScript() {
   }
 }
 
-// BIND ALL FUNCTIONS TO GLOBAL WINDOW OBJECT
+// EXACT EXECUTION: Trigger instantly at bottom of HTML body
+initApp();
+
 window.handleItemSelectChange = handleItemSelectChange;
 window.updateItemPricePreview = updateItemPricePreview;
 window.adjustQty = adjustQty;
@@ -719,7 +792,8 @@ window.deleteAdminMenuItem = deleteAdminMenuItem;
 window.resetAdminMenuForm = resetAdminMenuForm;
 window.resetMenuToDefault = resetMenuToDefault;
 window.updateCutoffTime = updateCutoffTime;
-window.addTimerMinutes = addTimerMinutes;
 window.toggleFormLock = toggleFormLock;
 window.clearAllOrders = clearAllOrders;
+window.viewHistory = viewHistory;
+window.deleteHistory = deleteHistory;
 window.copyPhoneScript = copyPhoneScript;

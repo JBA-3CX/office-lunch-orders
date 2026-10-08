@@ -62,18 +62,23 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 function initFirebaseListeners() {
+  // Sync orders from cloud
   db.ref('orders').on('value', (snapshot) => {
     ordersMap = snapshot.val() || {};
     renderOrders();
   });
 
+  // Sync menu from cloud ONLY if valid array exists
   db.ref('menu').on('value', (snapshot) => {
     const data = snapshot.val();
-    if (data) {
+    if (data && Array.isArray(Object.values(data)) && Object.values(data).length > 0) {
       menu = Object.values(data);
       populateMenuSelect();
       handleItemSelectChange();
       renderAdminMenuList();
+    } else {
+      // If Firebase menu is empty, upload default menu to seed the database
+      db.ref('menu').set(DEFAULT_MENU);
     }
   });
 }

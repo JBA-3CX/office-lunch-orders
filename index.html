@@ -6,6 +6,10 @@
   <title>Aphrodite's Snacks - Office Lunch Order</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Panzoom Library for Menu Zoom & Pan -->
+  <script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@4.5.1/dist/panzoom.min.js"></script>
+
   <style>
     body { background-color: #0f172a; color: #f8fafc; }
     .glass-card { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
@@ -223,15 +227,36 @@
     </div>
   </main>
 
-<!-- LIGHTBOX MODAL -->
-<div id="lightbox-modal" class="fixed inset-0 z-50 modal-backdrop hidden flex items-center justify-center p-4" onclick="closeLightbox()">
-  <div class="relative max-w-4xl max-h-[90vh] w-full" onclick="event.stopPropagation()">
-    <button onclick="closeLightbox()" class="absolute -top-10 right-0 text-white text-2xl font-bold hover:text-amber-400">
-      <i class="fa-solid fa-xmark"></i> Close
-    </button>
-    <img src="./menu.jpg" alt="Aphrodite's Snacks Menu Full" class="w-full h-auto max-h-[85vh] object-contain rounded-xl shadow-2xl border border-slate-700">
+  <!-- LIGHTBOX MODAL WITH ZOOM (USING HIGH-RES menu.jpg) -->
+  <div id="lightbox-modal" class="fixed inset-0 z-50 modal-backdrop hidden flex items-center justify-center p-4 overflow-hidden" onclick="closeLightbox()">
+    
+    <!-- Floating Control Bar -->
+    <div class="absolute top-4 right-4 z-20 flex items-center gap-2" onclick="event.stopPropagation()">
+      <button onclick="zoomInLightbox()" class="bg-slate-800/90 hover:bg-slate-700 text-white w-10 h-10 rounded-xl border border-slate-700 flex items-center justify-center font-bold text-lg shadow-lg">
+        <i class="fa-solid fa-plus"></i>
+      </button>
+      <button onclick="zoomOutLightbox()" class="bg-slate-800/90 hover:bg-slate-700 text-white w-10 h-10 rounded-xl border border-slate-700 flex items-center justify-center font-bold text-lg shadow-lg">
+        <i class="fa-solid fa-minus"></i>
+      </button>
+      <button onclick="resetZoomLightbox()" class="bg-slate-800/90 hover:bg-slate-700 text-white px-3 h-10 rounded-xl border border-slate-700 text-xs font-bold shadow-lg">
+        Reset
+      </button>
+      <button onclick="closeLightbox()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 px-3.5 h-10 rounded-xl font-extrabold text-xs shadow-lg ml-2 flex items-center gap-1.5">
+        <i class="fa-solid fa-xmark text-sm"></i> Close
+      </button>
+    </div>
+
+    <div class="text-xs text-slate-400 absolute bottom-4 left-1/2 -translate-x-1/2 pointer-events-none bg-slate-900/80 px-3 py-1.5 rounded-full border border-slate-800">
+      <i class="fa-solid fa-hand-pointer mr-1 text-amber-400"></i> Scroll or pinch to zoom • Drag to move
+    </div>
+
+    <!-- Zoomable Container -->
+    <div class="relative max-w-5xl max-h-[85vh] w-full flex items-center justify-center" onclick="event.stopPropagation()">
+      <div id="panzoom-element" class="cursor-grab active:cursor-grabbing">
+        <img src="./menu.jpg" alt="Aphrodite's Snacks Menu Full" class="max-w-full max-h-[80vh] object-contain rounded-xl shadow-2xl border border-slate-700">
+      </div>
+    </div>
   </div>
-</div>
 
   <!-- ADMIN MODAL -->
   <div id="admin-modal" class="fixed inset-0 z-50 modal-backdrop hidden flex items-center justify-center p-4">

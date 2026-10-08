@@ -33,7 +33,7 @@
         </div>
       </div>
 
-      <!-- Prominent Cutoff Countdown Bar -->
+      <!-- Cutoff Countdown Bar -->
       <div class="bg-amber-500/10 border border-amber-500/30 px-5 py-2 rounded-xl flex items-center gap-4 shadow-inner w-full md:w-auto justify-between md:justify-start">
         <div class="text-right">
           <div class="text-[10px] uppercase tracking-wider font-bold text-amber-400">Order Cutoff</div>
@@ -312,9 +312,11 @@
     </div>
   </div>
 
-  <!-- LOAD APPLICATION SCRIPTS -->
-  <script type="module" src="./firebase-config.js"></script>
+  <!-- FAST FIREBASE SDK INCLUSIONS -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+  <!-- APPLICATION SCRIPT -->
   <script src="./app.js"></script>
-  <script type="module" src="./app.js"></script>
 </body>
 </html>

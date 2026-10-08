@@ -235,7 +235,8 @@
   </main>
 
   <!-- LIGHTBOX MODAL WITH ZOOM -->
-  <div id="lightbox-modal" class="fixed inset-0 z-50 modal-backdrop hidden flex items-center justify-center p-4 overflow-hidden" onclick="closeLightbox()">
+  <!-- LIGHTBOX MODAL WITH ZOOM -->
+  <div id="lightbox-modal" class="fixed inset-0 z-50 modal-backdrop hidden flex items-center justify-center overflow-hidden" onclick="closeLightbox()">
     <div class="absolute top-4 right-4 z-20 flex items-center gap-2" onclick="event.stopPropagation()">
       <button onclick="zoomInLightbox()" class="bg-slate-800/90 hover:bg-slate-700 text-white w-10 h-10 rounded-xl border border-slate-700 flex items-center justify-center font-bold text-lg shadow-lg"><i class="fa-solid fa-plus"></i></button>
       <button onclick="zoomOutLightbox()" class="bg-slate-800/90 hover:bg-slate-700 text-white w-10 h-10 rounded-xl border border-slate-700 flex items-center justify-center font-bold text-lg shadow-lg"><i class="fa-solid fa-minus"></i></button>
@@ -243,13 +244,16 @@
       <button onclick="closeLightbox()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 px-3.5 h-10 rounded-xl font-extrabold text-xs shadow-lg ml-2 flex items-center gap-1.5"><i class="fa-solid fa-xmark text-sm"></i> Close</button>
     </div>
     
+    <!-- Bottom Instruction -->
     <div class="text-xs text-slate-400 absolute bottom-4 left-1/2 -translate-x-1/2 pointer-events-none bg-slate-900/80 px-3 py-1.5 rounded-full border border-slate-800 z-20">
       <i class="fa-solid fa-hand-pointer mr-1 text-amber-400"></i> Scroll or pinch to zoom • Drag to move
     </div>
     
-    <!-- IMPORTANT: Added loading="lazy" here so it stops blocking the browser -->
-    <div class="w-full h-full flex items-center justify-center pointer-events-none" onclick="event.stopPropagation()">
-<img id="panzoom-element" loading="lazy" src="./menu.webp" alt="Aphrodite's Snacks Menu Full" class="pointer-events-auto cursor-grab active:cursor-grabbing max-w-full max-h-[85vh] w-auto h-auto object-contain rounded-xl shadow-2xl border border-slate-700">
+    <!-- STRICTLY CONSTRAINED ZOOM CONTAINER -->
+    <div class="absolute inset-0 flex items-center justify-center pointer-events-none p-4 md:p-12" onclick="event.stopPropagation()">
+      <div id="panzoom-element" class="pointer-events-auto cursor-grab active:cursor-grabbing flex items-center justify-center w-full h-full max-w-6xl max-h-[85vh]">
+        <img loading="lazy" src="./menu.webp" alt="Aphrodite's Snacks Menu Full" class="w-full h-full object-contain drop-shadow-2xl rounded-xl border border-slate-700/80">
+      </div>
     </div>
   </div>
 

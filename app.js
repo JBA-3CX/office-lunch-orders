@@ -48,6 +48,7 @@ let ordersMap = {};
 let currentCart = [];
 let isLocked = false;
 let adminPIN = "1234";
+let panzoomInstance = null;
 
 let cutoffDate = new Date();
 cutoffDate.setHours(11, 30, 0, 0);
@@ -442,8 +443,44 @@ function startCountdownTimer() {
   }, 1000);
 }
 
-function openLightbox() { document.getElementById('lightbox-modal').classList.remove('hidden'); }
-function closeLightbox() { document.getElementById('lightbox-modal').classList.add('hidden'); }
+// Lightbox with Panzoom Functions
+function openLightbox() {
+  const modal = document.getElementById('lightbox-modal');
+  const elem = document.getElementById('panzoom-element');
+  
+  modal.classList.remove('hidden');
+
+  if (!panzoomInstance && elem && window.Panzoom) {
+    panzoomInstance = Panzoom(elem, {
+      maxScale: 4,
+      minScale: 1,
+      contain: 'outside',
+      cursor: 'grab'
+    });
+
+    elem.parentElement.addEventListener('wheel', panzoomInstance.zoomWithWheel);
+  } else if (panzoomInstance) {
+    panzoomInstance.reset();
+  }
+}
+
+function closeLightbox() {
+  document.getElementById('lightbox-modal').classList.add('hidden');
+  if (panzoomInstance) panzoomInstance.reset();
+}
+
+function zoomInLightbox() {
+  if (panzoomInstance) panzoomInstance.zoomIn();
+}
+
+function zoomOutLightbox() {
+  if (panzoomInstance) panzoomInstance.zoomOut();
+}
+
+function resetZoomLightbox() {
+  if (panzoomInstance) panzoomInstance.reset();
+}
+
 function openAdminModal() { document.getElementById('admin-modal').classList.remove('hidden'); }
 function closeAdminModal() { document.getElementById('admin-modal').classList.add('hidden'); }
 

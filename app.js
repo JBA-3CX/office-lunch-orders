@@ -511,11 +511,12 @@ function openLightbox() {
 
   if (!panzoomInstance && elem && window.Panzoom) {
     panzoomInstance = Panzoom(elem, {
-      maxScale: 4,
+      maxScale: 5,
       minScale: 1,
-      contain: 'outside',
+      step: 0.3,
       cursor: 'grab'
     });
+    // Add wheel zoom to the parent container
     elem.parentElement.addEventListener('wheel', panzoomInstance.zoomWithWheel);
   } else if (panzoomInstance) {
     panzoomInstance.reset();

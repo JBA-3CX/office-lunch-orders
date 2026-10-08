@@ -7,28 +7,35 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    .glass-panel {
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(10px);
+    body {
+      background-color: #0f172a;
+      color: #f8fafc;
+    }
+    .glass-card {
+      background: rgba(30, 41, 59, 0.7);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
     }
     .modal-backdrop {
-      background-color: rgba(0, 0, 0, 0.85);
+      background-color: rgba(2, 6, 23, 0.85);
     }
   </style>
 </head>
-<body class="bg-slate-100 min-h-screen font-sans text-slate-800 pb-12">
+<body class="min-h-screen font-sans antialiased pb-12">
 
   <!-- TOP HEADER & CUTOFF TIMER BANNER -->
-  <header class="bg-amber-500 text-white shadow-lg sticky top-0 z-30">
+  <header class="bg-slate-900/90 border-b border-amber-500/20 backdrop-blur-md sticky top-0 z-30 shadow-xl">
     <div class="max-w-6xl mx-auto px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-3">
       <div class="flex items-center gap-3">
-        <div class="bg-white p-2 rounded-lg text-amber-600 font-bold text-xl shadow-sm">
+        <div class="bg-amber-500/10 border border-amber-500/30 p-2.5 rounded-xl text-amber-400 font-bold text-xl shadow-inner">
           🥪
         </div>
         <div>
-          <h1 class="font-extrabold text-xl tracking-tight leading-tight">Aphrodite's Snacks</h1>
-          <p class="text-xs text-amber-100 flex items-center gap-2">
-            <span><i class="fa-solid fa-phone"></i> 22.776480 / 22.774132</span>
+          <h1 class="font-extrabold text-xl tracking-tight text-white flex items-center gap-2">
+            Aphrodite's Snacks
+          </h1>
+          <p class="text-xs text-slate-400 flex items-center gap-2">
+            <span class="text-amber-400"><i class="fa-solid fa-phone"></i> 22.776480 / 22.774132</span>
             <span>•</span>
             <span>34D Metochiou St, Lefkosia</span>
           </p>
@@ -36,15 +43,15 @@
       </div>
 
       <!-- Prominent Cutoff Countdown Bar -->
-      <div class="bg-amber-600/90 border border-amber-400 px-5 py-2 rounded-xl flex items-center gap-4 shadow-inner w-full md:w-auto justify-between md:justify-start">
+      <div class="bg-amber-500/10 border border-amber-500/30 px-5 py-2 rounded-xl flex items-center gap-4 shadow-inner w-full md:w-auto justify-between md:justify-start">
         <div class="text-right">
-          <div class="text-[10px] uppercase tracking-wider font-bold text-amber-200">Order Cutoff</div>
-          <div id="cutoff-time-display" class="font-bold text-sm">11:30 AM</div>
+          <div class="text-[10px] uppercase tracking-wider font-bold text-amber-400">Order Cutoff</div>
+          <div id="cutoff-time-display" class="font-bold text-sm text-slate-200">11:30 AM</div>
         </div>
-        <div class="h-8 w-px bg-amber-400/50"></div>
+        <div class="h-8 w-px bg-amber-500/30"></div>
         <div class="text-center">
-          <div class="text-[10px] uppercase tracking-wider font-bold text-amber-200">Time Remaining</div>
-          <div id="timer-display" class="font-black text-2xl font-mono tracking-tight text-white">00:00:00</div>
+          <div class="text-[10px] uppercase tracking-wider font-bold text-amber-400">Time Remaining</div>
+          <div id="timer-display" class="font-black text-2xl font-mono tracking-tight text-amber-400 drop-shadow-[0_0_8px_rgba(245,158,11,0.3)]">00:00:00</div>
         </div>
       </div>
     </div>
@@ -56,33 +63,33 @@
     <div class="lg:col-span-7 space-y-6">
 
       <!-- ORDER FORM CARD -->
-      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 relative">
-        <div id="form-locked-overlay" class="hidden absolute inset-0 bg-slate-900/60 backdrop-blur-sm rounded-2xl z-20 flex flex-col items-center justify-center text-white p-6 text-center">
+      <div class="glass-card rounded-2xl p-6 relative shadow-2xl">
+        <div id="form-locked-overlay" class="hidden absolute inset-0 bg-slate-950/80 backdrop-blur-md rounded-2xl z-20 flex flex-col items-center justify-center text-white p-6 text-center">
           <i class="fa-solid fa-lock text-5xl mb-3 text-amber-400"></i>
           <h2 class="text-2xl font-bold">Ordering is Closed</h2>
-          <p class="text-slate-200 text-sm mt-1">The deadline for today's order has passed.</p>
+          <p class="text-slate-400 text-sm mt-1">The deadline for today's order has passed.</p>
         </div>
 
-        <div class="flex justify-between items-center mb-5 pb-3 border-b border-slate-100">
-          <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
-            <i class="fa-solid fa-cart-plus text-amber-500"></i> Place Your Order
+        <div class="flex justify-between items-center mb-5 pb-3 border-b border-slate-700/60">
+          <h2 class="text-lg font-bold text-slate-100 flex items-center gap-2">
+            <i class="fa-solid fa-cart-plus text-amber-400"></i> Place Your Order
           </h2>
-          <span class="text-xs bg-amber-100 text-amber-800 font-medium px-2.5 py-1 rounded-full">Step 1 of 2</span>
+          <span class="text-xs bg-amber-500/10 border border-amber-500/30 text-amber-400 font-medium px-2.5 py-1 rounded-full">Step 1 of 2</span>
         </div>
 
         <!-- Name Input -->
         <div class="mb-5">
-          <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Your Name *</label>
-          <input type="text" id="user-name" placeholder="Enter your full name" class="w-full border border-slate-300 rounded-lg px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none">
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Your Name *</label>
+          <input type="text" id="user-name" placeholder="Enter your full name" class="w-full bg-slate-900/80 border border-slate-700/80 text-white rounded-lg px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none">
         </div>
 
         <!-- Item Selector Box -->
-        <div class="bg-slate-50 rounded-xl p-4 border border-slate-200/80 mb-5 space-y-4">
-          <div class="font-semibold text-xs text-slate-500 uppercase tracking-wider">Select Item to Add</div>
+        <div class="bg-slate-900/60 rounded-xl p-4 border border-slate-800 mb-5 space-y-4">
+          <div class="font-semibold text-xs text-amber-400 uppercase tracking-wider">Select Item to Add</div>
           
           <div>
-            <label class="block text-xs font-medium text-slate-700 mb-1">Menu Item</label>
-            <select id="item-select" onchange="handleItemSelectChange()" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-amber-500 outline-none">
+            <label class="block text-xs font-medium text-slate-300 mb-1">Menu Item</label>
+            <select id="item-select" onchange="handleItemSelectChange()" class="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 outline-none">
               <!-- Dynamic Options -->
             </select>
           </div>
@@ -90,8 +97,8 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <!-- Dynamic Size Option -->
             <div id="size-container">
-              <label class="block text-xs font-medium text-slate-700 mb-1">Size / Portion</label>
-              <select id="size-select" onchange="updateItemPricePreview()" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-amber-500 outline-none">
+              <label class="block text-xs font-medium text-slate-300 mb-1">Size / Portion</label>
+              <select id="size-select" onchange="updateItemPricePreview()" class="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 outline-none">
                 <option value="Single" data-price="4.00">Single (€4.00)</option>
                 <option value="Double" data-price="6.50">Double (€6.50)</option>
               </select>
@@ -99,87 +106,87 @@
 
             <!-- Quantity -->
             <div>
-              <label class="block text-xs font-medium text-slate-700 mb-1">Quantity</label>
+              <label class="block text-xs font-medium text-slate-300 mb-1">Quantity</label>
               <div class="flex items-center">
-                <button type="button" onclick="adjustQty(-1)" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-3 py-2 rounded-l-lg border border-r-0 border-slate-300">-</button>
-                <input type="number" id="item-qty" value="1" min="1" max="10" readonly class="w-full text-center border-y border-slate-300 py-2 text-sm bg-white font-bold">
-                <button type="button" onclick="adjustQty(1)" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-3 py-2 rounded-r-lg border border-l-0 border-slate-300">+</button>
+                <button type="button" onclick="adjustQty(-1)" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-2 rounded-l-lg border border-r-0 border-slate-700">-</button>
+                <input type="number" id="item-qty" value="1" min="1" max="10" readonly class="w-full text-center border-y border-slate-700 py-2 text-sm bg-slate-900 font-bold text-white">
+                <button type="button" onclick="adjustQty(1)" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-2 rounded-r-lg border border-l-0 border-slate-700">+</button>
               </div>
             </div>
           </div>
 
           <!-- Optional Extras Checkboxes -->
           <div>
-            <label class="block text-xs font-medium text-slate-700 mb-1.5">Optional Extras / Add-ons (+€0.50 each)</label>
+            <label class="block text-xs font-medium text-slate-300 mb-1.5">Optional Extras / Add-ons (+€0.50 each)</label>
             <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
-              <label class="flex items-center gap-1.5 bg-white p-2 rounded border border-slate-200 cursor-pointer">
-                <input type="checkbox" name="extra" value="Cheese" onchange="updateItemPricePreview()" class="rounded text-amber-500"> Cheese
+              <label class="flex items-center gap-1.5 bg-slate-800/80 p-2 rounded border border-slate-700 text-slate-300 cursor-pointer hover:bg-slate-700/50">
+                <input type="checkbox" name="extra" value="Cheese" onchange="updateItemPricePreview()" class="rounded text-amber-500 focus:ring-0 accent-amber-500"> Cheese
               </label>
-              <label class="flex items-center gap-1.5 bg-white p-2 rounded border border-slate-200 cursor-pointer">
-                <input type="checkbox" name="extra" value="Bacon" onchange="updateItemPricePreview()" class="rounded text-amber-500"> Bacon
+              <label class="flex items-center gap-1.5 bg-slate-800/80 p-2 rounded border border-slate-700 text-slate-300 cursor-pointer hover:bg-slate-700/50">
+                <input type="checkbox" name="extra" value="Bacon" onchange="updateItemPricePreview()" class="rounded text-amber-500 focus:ring-0 accent-amber-500"> Bacon
               </label>
-              <label class="flex items-center gap-1.5 bg-white p-2 rounded border border-slate-200 cursor-pointer">
-                <input type="checkbox" name="extra" value="Egg" onchange="updateItemPricePreview()" class="rounded text-amber-500"> Egg
+              <label class="flex items-center gap-1.5 bg-slate-800/80 p-2 rounded border border-slate-700 text-slate-300 cursor-pointer hover:bg-slate-700/50">
+                <input type="checkbox" name="extra" value="Egg" onchange="updateItemPricePreview()" class="rounded text-amber-500 focus:ring-0 accent-amber-500"> Egg
               </label>
-              <label class="flex items-center gap-1.5 bg-white p-2 rounded border border-slate-200 cursor-pointer">
-                <input type="checkbox" name="extra" value="Mushrooms" onchange="updateItemPricePreview()" class="rounded text-amber-500"> Mushrooms
+              <label class="flex items-center gap-1.5 bg-slate-800/80 p-2 rounded border border-slate-700 text-slate-300 cursor-pointer hover:bg-slate-700/50">
+                <input type="checkbox" name="extra" value="Mushrooms" onchange="updateItemPricePreview()" class="rounded text-amber-500 focus:ring-0 accent-amber-500"> Mushrooms
               </label>
-              <label class="flex items-center gap-1.5 bg-white p-2 rounded border border-slate-200 cursor-pointer">
-                <input type="checkbox" name="extra" value="Haloumi" onchange="updateItemPricePreview()" class="rounded text-amber-500"> Haloumi
+              <label class="flex items-center gap-1.5 bg-slate-800/80 p-2 rounded border border-slate-700 text-slate-300 cursor-pointer hover:bg-slate-700/50">
+                <input type="checkbox" name="extra" value="Haloumi" onchange="updateItemPricePreview()" class="rounded text-amber-500 focus:ring-0 accent-amber-500"> Haloumi
               </label>
-              <label class="flex items-center gap-1.5 bg-white p-2 rounded border border-slate-200 cursor-pointer">
-                <input type="checkbox" name="extra" value="Sautéed Onions" onchange="updateItemPricePreview()" class="rounded text-amber-500"> Free Onions
+              <label class="flex items-center gap-1.5 bg-slate-800/80 p-2 rounded border border-slate-700 text-slate-300 cursor-pointer hover:bg-slate-700/50">
+                <input type="checkbox" name="extra" value="Sautéed Onions" onchange="updateItemPricePreview()" class="rounded text-amber-500 focus:ring-0 accent-amber-500"> Free Onions
               </label>
             </div>
           </div>
 
           <!-- Custom Comment / Modification -->
           <div>
-            <label class="block text-xs font-medium text-slate-700 mb-1">Special Instructions / Comments</label>
-            <input type="text" id="item-comment" placeholder="e.g. No tomato, extra sauce, brown bread" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-amber-500 outline-none">
+            <label class="block text-xs font-medium text-slate-300 mb-1">Special Instructions / Comments</label>
+            <input type="text" id="item-comment" placeholder="e.g. No tomato, extra sauce, brown bread" class="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 outline-none">
           </div>
 
           <!-- Add to Cart Button -->
           <div class="pt-2 flex items-center justify-between">
-            <div class="text-xs text-slate-500">
-              Item Total: <span id="item-price-preview" class="font-bold text-slate-800 text-sm">€4.00</span>
+            <div class="text-xs text-slate-400">
+              Selected Item Price: <span id="item-price-preview" class="font-bold text-amber-400 text-sm">€4.00</span>
             </div>
-            <button type="button" onclick="addToCart()" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold px-4 py-2.5 rounded-lg shadow-sm transition flex items-center gap-2">
-              <i class="fa-solid fa-plus"></i> Add Item to Order
+            <button type="button" onclick="addToCart()" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white text-xs font-bold px-4 py-2.5 rounded-lg shadow-sm transition flex items-center gap-2">
+              <i class="fa-solid fa-plus text-amber-400"></i> Add Item to Order
             </button>
           </div>
         </div>
 
         <!-- STAGED ITEMS (CART) LIST -->
         <div id="cart-container" class="mb-5 hidden">
-          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">Items in your order:</h3>
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Items in your order:</h3>
           <div id="cart-items" class="space-y-2 mb-3">
             <!-- Dynamic Cart Rows -->
           </div>
-          <div class="flex justify-between items-center p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm font-bold text-amber-900">
+          <div class="flex justify-between items-center p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg text-sm font-bold text-amber-400">
             <span>Total Order Amount:</span>
             <span id="cart-total-price">€0.00</span>
           </div>
         </div>
 
         <!-- SUBMIT ORDER BUTTON -->
-        <button type="button" onclick="submitFinalOrder()" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 px-4 rounded-xl shadow-md transition flex items-center justify-center gap-2 text-base">
+        <button type="button" onclick="submitFinalOrder()" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold py-3.5 px-4 rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-base">
           <i class="fa-solid fa-paper-plane"></i> Submit Final Order
         </button>
       </div>
 
       <!-- MENU IMAGE CARD WITH LIGHTBOX CLICK -->
-      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4">
+      <div class="glass-card rounded-2xl p-4">
         <div class="flex justify-between items-center mb-3">
-          <h3 class="font-bold text-sm text-slate-700 flex items-center gap-2">
-            <i class="fa-solid fa-book-open text-amber-500"></i> Menu Card Reference
+          <h3 class="font-bold text-sm text-slate-200 flex items-center gap-2">
+            <i class="fa-solid fa-book-open text-amber-400"></i> Menu Card Reference
           </h3>
           <span class="text-xs text-slate-400">Click image to enlarge</span>
         </div>
-        <div class="relative group cursor-pointer overflow-hidden rounded-xl border border-slate-200" onclick="openLightbox()">
-          <img src="https://lh3.googleusercontent.com/d/1X6G0T5W1Q3a7pX4p9G4y2-V3xR-5H6j" alt="Aphrodite's Snacks Menu" class="w-full h-auto object-cover group-hover:scale-105 transition duration-300">
-          <div class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white font-medium text-sm gap-2">
-            <i class="fa-solid fa-magnifying-glass-plus text-xl"></i> View Fullscreen
+        <div class="relative group cursor-pointer overflow-hidden rounded-xl border border-slate-700/80" onclick="openLightbox()">
+          <img src="menu.webp" alt="Aphrodite's Snacks Menu" class="w-full h-auto object-cover group-hover:scale-105 transition duration-300">
+          <div class="absolute inset-0 bg-slate-950/60 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-amber-400 font-medium text-sm gap-2">
+            <i class="fa-solid fa-magnifying-glass-plus text-xl"></i> View Fullscreen Menu
           </div>
         </div>
       </div>
@@ -188,22 +195,22 @@
     <!-- RIGHT COLUMN: DISTRIBUTION & CALLER VIEW (Lg: 5 cols) -->
     <div class="lg:col-span-5 space-y-6">
 
-      <!-- TAB SELECTION (Flipped: Individual Orders default) -->
-      <div class="bg-slate-200 p-1 rounded-xl flex gap-1">
-        <button id="tab-dist-btn" onclick="switchTab('dist')" class="flex-1 py-2 text-xs font-bold rounded-lg transition bg-white shadow-sm text-slate-800">
+      <!-- TAB SELECTION (People View default on Left) -->
+      <div class="bg-slate-900/80 p-1.5 rounded-xl border border-slate-800 flex gap-1">
+        <button id="tab-dist-btn" onclick="switchTab('dist')" class="flex-1 py-2 text-xs font-bold rounded-lg transition bg-amber-500 text-slate-950 shadow-md">
           <i class="fa-solid fa-users mr-1"></i> People View
         </button>
-        <button id="tab-phone-btn" onclick="switchTab('phone')" class="flex-1 py-2 text-xs font-bold rounded-lg transition text-slate-600 hover:text-slate-800">
-          <i class="fa-solid fa-phone-volume mr-1 text-amber-500"></i> Caller View (Aggregated)
+        <button id="tab-phone-btn" onclick="switchTab('phone')" class="flex-1 py-2 text-xs font-bold rounded-lg transition text-slate-400 hover:text-slate-200">
+          <i class="fa-solid fa-phone-volume mr-1 text-amber-400"></i> Caller View
         </button>
       </div>
 
       <!-- DISTRIBUTION VIEW (By Person - DEFAULT) -->
-      <div id="tab-dist-content" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
-        <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-100">
+      <div id="tab-dist-content" class="glass-card rounded-2xl p-5 shadow-2xl">
+        <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-700/60">
           <div>
-            <h3 class="font-bold text-slate-800 text-base">Individual Orders</h3>
-            <p class="text-xs text-slate-500">Who ordered what for food arrival</p>
+            <h3 class="font-bold text-slate-100 text-base">Individual Orders</h3>
+            <p class="text-xs text-slate-400">Who ordered what for food arrival</p>
           </div>
         </div>
 
@@ -214,13 +221,13 @@
       </div>
 
       <!-- CALLER VIEW (Aggregated for Phone Call) -->
-      <div id="tab-phone-content" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 hidden">
-        <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-100">
+      <div id="tab-phone-content" class="glass-card rounded-2xl p-5 shadow-2xl hidden">
+        <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-700/60">
           <div>
-            <h3 class="font-bold text-slate-800 text-base">Phone Order Checklist</h3>
-            <p class="text-xs text-slate-500">Grouped items for fast reading over the phone</p>
+            <h3 class="font-bold text-slate-100 text-base">Phone Order Checklist</h3>
+            <p class="text-xs text-slate-400">Grouped items for fast reading over the phone</p>
           </div>
-          <button onclick="copyPhoneScript()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs px-3 py-1.5 rounded-lg font-medium border border-slate-300 transition flex items-center gap-1.5">
+          <button onclick="copyPhoneScript()" class="bg-slate-800 hover:bg-slate-700 text-amber-400 text-xs px-3 py-1.5 rounded-lg font-medium border border-slate-700 transition flex items-center gap-1.5">
             <i class="fa-regular fa-copy"></i> Copy Script
           </button>
         </div>
@@ -230,15 +237,15 @@
           <!-- Dynamic Aggregated Items -->
         </div>
 
-        <div class="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center text-sm font-bold text-slate-800">
-          <span>Total Orders: <span id="total-items-count" class="text-amber-600">0</span></span>
-          <span>Grand Total: <span id="grand-total-price" class="text-emerald-600">€0.00</span></span>
+        <div class="mt-4 pt-3 border-t border-slate-700/60 flex justify-between items-center text-sm font-bold text-slate-200">
+          <span>Total Orders: <span id="total-items-count" class="text-amber-400">0</span></span>
+          <span>Grand Total: <span id="grand-total-price" class="text-emerald-400">€0.00</span></span>
         </div>
       </div>
 
       <!-- ADMIN CONTROLS BUTTON & MODAL TRIGGER -->
       <div class="text-center pt-2">
-        <button onclick="openAdminModal()" class="text-xs text-slate-400 hover:text-slate-600 underline font-medium">
+        <button onclick="openAdminModal()" class="text-xs text-slate-500 hover:text-slate-300 underline font-medium">
           <i class="fa-solid fa-gear"></i> Admin Controls & Countdown Settings
         </button>
       </div>
@@ -252,47 +259,47 @@
       <button onclick="closeLightbox()" class="absolute -top-10 right-0 text-white text-2xl font-bold hover:text-amber-400">
         <i class="fa-solid fa-xmark"></i> Close
       </button>
-      <img src="https://lh3.googleusercontent.com/d/1X6G0T5W1Q3a7pX4p9G4y2-V3xR-5H6j" alt="Aphrodite's Snacks Menu Full" class="w-full h-auto max-h-[85vh] object-contain rounded-lg shadow-2xl">
+      <img src="menu.webp" alt="Aphrodite's Snacks Menu Full" class="w-full h-auto max-h-[85vh] object-contain rounded-xl shadow-2xl border border-slate-700">
     </div>
   </div>
 
   <!-- ADMIN PIN & SETTINGS MODAL -->
   <div id="admin-modal" class="fixed inset-0 z-50 modal-backdrop hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
-      <button onclick="closeAdminModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl relative text-white">
+      <button onclick="closeAdminModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white">
         <i class="fa-solid fa-xmark text-lg"></i>
       </button>
 
       <!-- PIN Auth Section -->
       <div id="admin-auth-section">
-        <h3 class="font-bold text-lg text-slate-800 mb-2">Admin Access</h3>
-        <p class="text-xs text-slate-500 mb-4">Enter PIN to manage menu and timer settings (Default: 1234)</p>
-        <input type="password" id="admin-pin-input" placeholder="Enter PIN" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm mb-3">
-        <button onclick="verifyAdminPIN()" class="w-full bg-slate-800 hover:bg-slate-900 text-white text-sm font-bold py-2 rounded-lg">Unlock Admin Panel</button>
+        <h3 class="font-bold text-lg text-slate-100 mb-2">Admin Access</h3>
+        <p class="text-xs text-slate-400 mb-4">Enter PIN to manage settings (Default PIN: 1234)</p>
+        <input type="password" id="admin-pin-input" placeholder="Enter PIN" class="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-2 text-sm mb-3 focus:ring-2 focus:ring-amber-500 outline-none">
+        <button onclick="verifyAdminPIN()" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 text-sm font-extrabold py-2 rounded-lg">Unlock Admin Panel</button>
       </div>
 
       <!-- Admin Controls Section (Hidden by Default) -->
       <div id="admin-panel-section" class="hidden space-y-4">
-        <h3 class="font-bold text-lg text-slate-800 border-b pb-2">Admin Dashboard</h3>
+        <h3 class="font-bold text-lg text-slate-100 border-b border-slate-700 pb-2">Admin Dashboard</h3>
 
         <!-- Timer Controls -->
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">Set Cutoff Time Today</label>
+          <label class="block text-xs font-bold text-slate-300 mb-1">Set Cutoff Time Today</label>
           <div class="flex gap-2">
-            <input type="time" id="cutoff-time-input" class="border border-slate-300 rounded-lg px-3 py-1.5 text-sm flex-1">
-            <button onclick="updateCutoffTime()" class="bg-amber-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg">Save</button>
+            <input type="time" id="cutoff-time-input" class="bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-1.5 text-sm flex-1 outline-none">
+            <button onclick="updateCutoffTime()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-bold px-3 py-1.5 rounded-lg">Save</button>
           </div>
           <div class="flex gap-1 mt-2">
-            <button onclick="addTimerMinutes(15)" class="text-[10px] bg-slate-100 hover:bg-slate-200 px-2 py-1 rounded">+15m</button>
-            <button onclick="addTimerMinutes(30)" class="text-[10px] bg-slate-100 hover:bg-slate-200 px-2 py-1 rounded">+30m</button>
-            <button onclick="addTimerMinutes(60)" class="text-[10px] bg-slate-100 hover:bg-slate-200 px-2 py-1 rounded">+1hr</button>
+            <button onclick="addTimerMinutes(15)" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1 rounded border border-slate-700">+15m</button>
+            <button onclick="addTimerMinutes(30)" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1 rounded border border-slate-700">+30m</button>
+            <button onclick="addTimerMinutes(60)" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1 rounded border border-slate-700">+1hr</button>
           </div>
         </div>
 
         <!-- Manual Lock / Unlock -->
-        <div class="flex gap-2 pt-2 border-t">
-          <button onclick="toggleFormLock()" id="toggle-lock-btn" class="flex-1 bg-slate-700 text-white text-xs font-bold py-2 rounded-lg">Lock Orders Now</button>
-          <button onclick="clearAllOrders()" class="bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold px-3 py-2 rounded-lg border border-red-200">Clear All Orders</button>
+        <div class="flex gap-2 pt-2 border-t border-slate-700">
+          <button onclick="toggleFormLock()" id="toggle-lock-btn" class="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white text-xs font-bold py-2 rounded-lg">Lock Orders Now</button>
+          <button onclick="clearAllOrders()" class="bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-bold px-3 py-2 rounded-lg border border-red-500/30">Clear All Orders</button>
         </div>
       </div>
     </div>
@@ -474,16 +481,16 @@
       currentCart.forEach((c, index) => {
         grandCartTotal += c.totalPrice;
         const div = document.createElement('div');
-        div.className = "flex items-center justify-between bg-slate-100 p-2.5 rounded-lg text-xs border border-slate-200";
+        div.className = "flex items-center justify-between bg-slate-900/80 p-2.5 rounded-lg text-xs border border-slate-700/80";
         div.innerHTML = `
           <div>
-            <span class="font-bold text-slate-800">${c.qty}x ${c.itemName} (${c.size})</span>
-            ${c.extras.length ? `<span class="text-amber-700 block">+ ${c.extras.join(', ')}</span>` : ''}
-            ${c.comment ? `<span class="text-slate-500 italic block">"${c.comment}"</span>` : ''}
+            <span class="font-bold text-slate-200">${c.qty}x ${c.itemName} (${c.size})</span>
+            ${c.extras.length ? `<span class="text-amber-400 block">+ ${c.extras.join(', ')}</span>` : ''}
+            ${c.comment ? `<span class="text-slate-400 italic block">"${c.comment}"</span>` : ''}
           </div>
           <div class="flex items-center gap-2">
-            <span class="font-bold text-slate-700">€${c.totalPrice.toFixed(2)}</span>
-            <button onclick="removeFromCart(${index})" class="text-red-500 hover:text-red-700 px-1"><i class="fa-solid fa-trash"></i></button>
+            <span class="font-bold text-amber-400">€${c.totalPrice.toFixed(2)}</span>
+            <button onclick="removeFromCart(${index})" class="text-slate-500 hover:text-red-400 px-1"><i class="fa-solid fa-trash"></i></button>
           </div>
         `;
         itemsList.appendChild(div);
@@ -497,7 +504,7 @@
       renderCart();
     }
 
-    // SUBMIT FINAL ORDER
+    // SUBMIT FINAL ORDER (Auto-adds current form selection if cart is empty)
     function submitFinalOrder() {
       const userName = document.getElementById('user-name').value.trim();
       if (!userName) {
@@ -505,8 +512,18 @@
         return;
       }
 
+      // Automatically add current selection if cart is empty or if user modified the form
+      const itemId = parseInt(document.getElementById('item-select').value);
+      const itemComment = document.getElementById('item-comment').value.trim();
+      const hasCheckedExtras = document.querySelectorAll('input[name="extra"]:checked').length > 0;
+      const currentQty = parseInt(document.getElementById('item-qty').value);
+
+      if (currentCart.length === 0 || itemComment || hasCheckedExtras || currentQty > 1) {
+        addToCart();
+      }
+
       if (currentCart.length === 0) {
-        alert("Please add at least one item to your order!");
+        alert("Please select an item to order!");
         return;
       }
 
@@ -519,7 +536,7 @@
 
       localStorage.setItem('aphrodite_orders', JSON.stringify(orders));
 
-      // Reset
+      // Reset Form & Cart
       currentCart = [];
       renderCart();
       renderOrders();
@@ -541,7 +558,7 @@
       let grandTotal = 0;
 
       if (orders.length === 0) {
-        container.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">No orders placed yet.</p>`;
+        container.innerHTML = `<p class="text-xs text-slate-500 text-center py-6">No orders placed yet.</p>`;
         document.getElementById('total-items-count').textContent = '0';
         document.getElementById('grand-total-price').textContent = '€0.00';
         return;
@@ -577,15 +594,15 @@
       Object.keys(aggregated).forEach(key => {
         const group = aggregated[key];
         const card = document.createElement('div');
-        card.className = "p-3 bg-slate-50 border border-slate-200 rounded-xl";
+        card.className = "p-3 bg-slate-900/80 border border-slate-700/80 rounded-xl";
         card.innerHTML = `
           <div class="flex items-center justify-between mb-1">
             <label class="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" class="w-4 h-4 text-amber-500 rounded border-slate-300">
-              <span class="font-bold text-sm text-slate-800">${group.totalQty}x ${key}</span>
+              <input type="checkbox" class="w-4 h-4 text-amber-500 bg-slate-800 border-slate-700 rounded focus:ring-0 accent-amber-500">
+              <span class="font-bold text-sm text-slate-200">${group.totalQty}x ${key}</span>
             </label>
           </div>
-          <div class="pl-6 text-xs text-slate-500 space-y-0.5">
+          <div class="pl-6 text-xs text-slate-400 space-y-0.5">
             ${group.details.map(d => `<div>• ${d}</div>`).join('')}
           </div>
         `;
@@ -602,29 +619,29 @@
       container.innerHTML = '';
 
       if (orders.length === 0) {
-        container.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">No orders placed yet.</p>`;
+        container.innerHTML = `<p class="text-xs text-slate-500 text-center py-6">No orders placed yet.</p>`;
         return;
       }
 
       orders.forEach((order, index) => {
         const orderTotal = order.items.reduce((sum, i) => sum + i.totalPrice, 0);
         const card = document.createElement('div');
-        card.className = "p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2";
+        card.className = "p-3 bg-slate-900/80 border border-slate-700/80 rounded-xl space-y-2";
         
         let itemsHtml = order.items.map(i => `
-          <div class="text-xs border-b border-slate-200/60 pb-1 last:border-0">
-            <span class="font-bold text-slate-700">${i.qty}x ${i.itemName} (${i.size})</span>
-            ${i.extras.length ? `<span class="text-amber-700 block text-[11px]">+ ${i.extras.join(', ')}</span>` : ''}
-            ${i.comment ? `<span class="text-slate-500 block text-[11px] italic">"${i.comment}"</span>` : ''}
+          <div class="text-xs border-b border-slate-800 pb-1 last:border-0">
+            <span class="font-bold text-slate-200">${i.qty}x ${i.itemName} (${i.size})</span>
+            ${i.extras.length ? `<span class="text-amber-400 block text-[11px]">+ ${i.extras.join(', ')}</span>` : ''}
+            ${i.comment ? `<span class="text-slate-400 block text-[11px] italic">"${i.comment}"</span>` : ''}
           </div>
         `).join('');
 
         card.innerHTML = `
-          <div class="flex justify-between items-center border-b border-slate-200 pb-1.5">
-            <span class="font-bold text-sm text-slate-800">${order.person}</span>
+          <div class="flex justify-between items-center border-b border-slate-800 pb-1.5">
+            <span class="font-bold text-sm text-slate-100">${order.person}</span>
             <div class="flex items-center gap-2">
-              <span class="font-bold text-xs text-emerald-600">€${orderTotal.toFixed(2)}</span>
-              <button onclick="deleteOrder(${index})" class="text-slate-400 hover:text-red-500 text-xs"><i class="fa-solid fa-trash"></i></button>
+              <span class="font-bold text-xs text-emerald-400">€${orderTotal.toFixed(2)}</span>
+              <button onclick="deleteOrder(${index})" class="text-slate-500 hover:text-red-400 text-xs"><i class="fa-solid fa-trash"></i></button>
             </div>
           </div>
           <div class="space-y-1">${itemsHtml}</div>
@@ -641,7 +658,7 @@
       }
     }
 
-    // TAB SWITCHING
+    // TAB SWITCHING (People View on Left/Default)
     function switchTab(tab) {
       const phoneBtn = document.getElementById('tab-phone-btn');
       const distBtn = document.getElementById('tab-dist-btn');
@@ -649,13 +666,13 @@
       const distContent = document.getElementById('tab-dist-content');
 
       if (tab === 'phone') {
-        phoneBtn.className = "flex-1 py-2 text-xs font-bold rounded-lg transition bg-white shadow-sm text-slate-800";
-        distBtn.className = "flex-1 py-2 text-xs font-bold rounded-lg transition text-slate-600 hover:text-slate-800";
+        phoneBtn.className = "flex-1 py-2 text-xs font-bold rounded-lg transition bg-amber-500 text-slate-950 shadow-md";
+        distBtn.className = "flex-1 py-2 text-xs font-bold rounded-lg transition text-slate-400 hover:text-slate-200";
         phoneContent.classList.remove('hidden');
         distContent.classList.add('hidden');
       } else {
-        distBtn.className = "flex-1 py-2 text-xs font-bold rounded-lg transition bg-white shadow-sm text-slate-800";
-        phoneBtn.className = "flex-1 py-2 text-xs font-bold rounded-lg transition text-slate-600 hover:text-slate-800";
+        distBtn.className = "flex-1 py-2 text-xs font-bold rounded-lg transition bg-amber-500 text-slate-950 shadow-md";
+        phoneBtn.className = "flex-1 py-2 text-xs font-bold rounded-lg transition text-slate-400 hover:text-slate-200";
         distContent.classList.remove('hidden');
         phoneContent.classList.add('hidden');
       }

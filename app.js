@@ -573,13 +573,21 @@ function startCountdownTimer() {
 function openLightbox() {
   const modal = document.getElementById('lightbox-modal');
   const elem = document.getElementById('panzoom-element');
+  
   modal.classList.remove('hidden');
 
   if (!panzoomInstance && elem && window.Panzoom) {
-    panzoomInstance = Panzoom(elem, { maxScale: 4, minScale: 1, contain: 'outside', cursor: 'grab' });
+    panzoomInstance = Panzoom(elem, { 
+      maxScale: 5, 
+      minScale: 1, 
+      cursor: 'grab' 
+    });
     elem.parentElement.addEventListener('wheel', panzoomInstance.zoomWithWheel);
   } else if (panzoomInstance) {
-    panzoomInstance.reset();
+    // Slight delay ensures the modal finishes rendering before Panzoom resets dimensions
+    setTimeout(() => {
+      panzoomInstance.reset();
+    }, 10);
   }
 }
 function closeLightbox() {

@@ -1,6 +1,3 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getDatabase, ref, set, onValue, push, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-
 // Firebase Configuration
 const firebaseConfig = {
   apiKey: "AIzaSyDsqwJNqVHp7moMHka8dT0xllkEYioa2hg",
@@ -13,8 +10,9 @@ const firebaseConfig = {
   measurementId: "G-VGZV5SSE6Z"
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+// Initialize Firebase Immediately
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
 const DEFAULT_MENU = [
   { id: 1, category: "Sandwiches", name: "#1 Special (Mortatella, salami, ham, sausage)", basePrice: 4.00, hasDouble: true },
@@ -55,22 +53,22 @@ let cutoffDate = new Date();
 cutoffDate.setHours(11, 30, 0, 0);
 
 window.addEventListener('DOMContentLoaded', () => {
-  initFirebaseListeners();
+  // Render INSTANTLY from local memory
   populateMenuSelect();
   handleItemSelectChange();
   startCountdownTimer();
+
+  // Sync with cloud in background
+  initFirebaseListeners();
 });
 
 function initFirebaseListeners() {
-  const ordersRef = ref(db, 'orders');
-  onValue(ordersRef, (snapshot) => {
-    const data = snapshot.val();
-    ordersMap = data || {};
+  db.ref('orders').on('value', (snapshot) => {
+    ordersMap = snapshot.val() || {};
     renderOrders();
   });
 
-  const menuRef = ref(db, 'menu');
-  onValue(menuRef, (snapshot) => {
+  db.ref('menu').on('value', (snapshot) => {
     const data = snapshot.val();
     if (data) {
       menu = Object.values(data);
@@ -240,7 +238,6 @@ function submitFinalOrder() {
     return;
   }
 
-  // Auto-add current selection if cart is empty
   if (currentCart.length === 0) {
     addToCart();
   }
@@ -255,14 +252,11 @@ function submitFinalOrder() {
     timestamp: Date.now()
   };
 
-  // Push directly to Firebase Realtime DB
-  const ordersRef = ref(db, 'orders');
-  push(ordersRef, newOrder);
+  db.ref('orders').push(newOrder);
 
   currentCart = [];
   renderCart();
 
-  // Visual button feedback
   const submitBtn = document.querySelector("button[onclick='submitFinalOrder()']");
   if (submitBtn) {
     const originalHTML = submitBtn.innerHTML;
@@ -405,8 +399,7 @@ function renderDistributionView() {
 
 function deleteOrder(key) {
   if (confirm("Remove this order?")) {
-    const itemRef = ref(db, `orders/${key}`);
-    remove(itemRef);
+    db.ref(`orders/${key}`).remove();
   }
 }
 
@@ -519,8 +512,7 @@ function saveAdminMenuItem() {
     menu.push({ id: Date.now(), category, name, basePrice, hasDouble, isFries });
   }
 
-  const menuRef = ref(db, 'menu');
-  set(menuRef, menu);
+  db.ref('menu').set(menu);
 
   populateMenuSelect();
   handleItemSelectChange();
@@ -531,8 +523,7 @@ function saveAdminMenuItem() {
 function deleteAdminMenuItem(id) {
   if (confirm("Delete this menu item?")) {
     menu = menu.filter(m => m.id !== id);
-    const menuRef = ref(db, 'menu');
-    set(menuRef, menu);
+    db.ref('menu').set(menu);
 
     populateMenuSelect();
     handleItemSelectChange();
@@ -552,8 +543,7 @@ function resetAdminMenuForm() {
 function resetMenuToDefault() {
   if (confirm("Reset menu items back to default?")) {
     menu = [...DEFAULT_MENU];
-    const menuRef = ref(db, 'menu');
-    set(menuRef, menu);
+    db.ref('menu').set(menu);
 
     populateMenuSelect();
     handleItemSelectChange();
@@ -583,8 +573,7 @@ function toggleFormLock() {
 
 function clearAllOrders() {
   if (confirm("Are you sure you want to clear all orders?")) {
-    const ordersRef = ref(db, 'orders');
-    set(ordersRef, null);
+    db.ref('orders').set(null);
     closeAdminModal();
   }
 }
@@ -598,28 +587,3 @@ function copyPhoneScript() {
   });
   navigator.clipboard.writeText(script);
 }
-
-// Bind functions to window scope for inline HTML onclick handlers
-window.handleItemSelectChange = handleItemSelectChange;
-window.updateItemPricePreview = updateItemPricePreview;
-window.adjustQty = adjustQty;
-window.addToCart = addToCart;
-window.removeFromCart = removeFromCart;
-window.submitFinalOrder = submitFinalOrder;
-window.deleteOrder = deleteOrder;
-window.switchTab = switchTab;
-window.openLightbox = openLightbox;
-window.closeLightbox = closeLightbox;
-window.openAdminModal = openAdminModal;
-window.closeAdminModal = closeAdminModal;
-window.verifyAdminPIN = verifyAdminPIN;
-window.saveAdminMenuItem = saveAdminMenuItem;
-window.editAdminMenuItem = editAdminMenuItem;
-window.deleteAdminMenuItem = deleteAdminMenuItem;
-window.resetAdminMenuForm = resetAdminMenuForm;
-window.resetMenuToDefault = resetMenuToDefault;
-window.updateCutoffTime = updateCutoffTime;
-window.addTimerMinutes = addTimerMinutes;
-window.toggleFormLock = toggleFormLock;
-window.clearAllOrders = clearAllOrders;
-window.copyPhoneScript = copyPhoneScript;

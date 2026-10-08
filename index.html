@@ -6,19 +6,40 @@
   <title>Aphrodite's Snacks - Office Lunch Order</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Firebase JS SDK (Module CDN) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, set, onValue, push, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    // 🔑 YOUR FIREBASE CONFIGURATION INTEGRATED
+    const firebaseConfig = {
+      apiKey: "AIzaSyDsqwJNqVHp7moMHka8dT0xllkEYioa2hg",
+      authDomain: "office-lunch-orders.firebaseapp.com",
+      databaseURL: "https://office-lunch-orders-default-rtdb.firebaseio.com",
+      projectId: "office-lunch-orders",
+      storageBucket: "office-lunch-orders.firebasestorage.app",
+      messagingSenderId: "186331905102",
+      appId: "1:186331905102:web:b876c0fb394d4c36ad971f",
+      measurementId: "G-VGZV5SSE6Z"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    window.db = db;
+    window.dbRef = ref;
+    window.dbSet = set;
+    window.dbOnValue = onValue;
+    window.dbPush = push;
+    window.dbRemove = remove;
+  </script>
+
   <style>
-    body {
-      background-color: #0f172a;
-      color: #f8fafc;
-    }
-    .glass-card {
-      background: rgba(30, 41, 59, 0.7);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-    }
-    .modal-backdrop {
-      background-color: rgba(2, 6, 23, 0.85);
-    }
+    body { background-color: #0f172a; color: #f8fafc; }
+    .glass-card { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
+    .modal-backdrop { background-color: rgba(2, 6, 23, 0.85); }
   </style>
 </head>
 <body class="min-h-screen font-sans antialiased pb-12">
@@ -74,7 +95,9 @@
           <h2 class="text-lg font-bold text-slate-100 flex items-center gap-2">
             <i class="fa-solid fa-cart-plus text-amber-400"></i> Place Your Order
           </h2>
-          <span class="text-xs bg-amber-500/10 border border-amber-500/30 text-amber-400 font-medium px-2.5 py-1 rounded-full">Step 1 of 2</span>
+          <span class="text-xs bg-amber-500/10 border border-amber-500/30 text-amber-400 font-medium px-2.5 py-1 rounded-full flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Live Sync Enabled
+          </span>
         </div>
 
         <!-- Name Input -->
@@ -160,9 +183,7 @@
         <!-- STAGED ITEMS (CART) LIST -->
         <div id="cart-container" class="mb-5 hidden">
           <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Items in your order:</h3>
-          <div id="cart-items" class="space-y-2 mb-3">
-            <!-- Dynamic Cart Rows -->
-          </div>
+          <div id="cart-items" class="space-y-2 mb-3"></div>
           <div class="flex justify-between items-center p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg text-sm font-bold text-amber-400">
             <span>Total Order Amount:</span>
             <span id="cart-total-price">€0.00</span>
@@ -195,7 +216,7 @@
     <!-- RIGHT COLUMN: DISTRIBUTION & CALLER VIEW (Lg: 5 cols) -->
     <div class="lg:col-span-5 space-y-6">
 
-      <!-- TAB SELECTION (People View default on Left) -->
+      <!-- TAB SELECTION -->
       <div class="bg-slate-900/80 p-1.5 rounded-xl border border-slate-800 flex gap-1">
         <button id="tab-dist-btn" onclick="switchTab('dist')" class="flex-1 py-2 text-xs font-bold rounded-lg transition bg-amber-500 text-slate-950 shadow-md">
           <i class="fa-solid fa-users mr-1"></i> People View
@@ -213,11 +234,7 @@
             <p class="text-xs text-slate-400">Who ordered what for food arrival</p>
           </div>
         </div>
-
-        <!-- Distribution List -->
-        <div id="distribution-list" class="space-y-3 max-h-[500px] overflow-y-auto pr-1">
-          <!-- Dynamic List by Person -->
-        </div>
+        <div id="distribution-list" class="space-y-3 max-h-[500px] overflow-y-auto pr-1"></div>
       </div>
 
       <!-- CALLER VIEW (Aggregated for Phone Call) -->
@@ -231,19 +248,14 @@
             <i class="fa-regular fa-copy"></i> Copy Script
           </button>
         </div>
-
-        <!-- Phone Checklist Container -->
-        <div id="phone-checklist" class="space-y-3 max-h-[500px] overflow-y-auto pr-1">
-          <!-- Dynamic Aggregated Items -->
-        </div>
-
+        <div id="phone-checklist" class="space-y-3 max-h-[500px] overflow-y-auto pr-1"></div>
         <div class="mt-4 pt-3 border-t border-slate-700/60 flex justify-between items-center text-sm font-bold text-slate-200">
           <span>Total Orders: <span id="total-items-count" class="text-amber-400">0</span></span>
           <span>Grand Total: <span id="grand-total-price" class="text-emerald-400">€0.00</span></span>
         </div>
       </div>
 
-      <!-- ADMIN CONTROLS BUTTON & MODAL TRIGGER -->
+      <!-- ADMIN CONTROLS BUTTON -->
       <div class="text-center pt-2">
         <button onclick="openAdminModal()" class="text-xs text-slate-500 hover:text-slate-300 underline font-medium">
           <i class="fa-solid fa-gear"></i> Admin Controls & Countdown Settings
@@ -278,7 +290,7 @@
         <button onclick="verifyAdminPIN()" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 text-sm font-extrabold py-2 rounded-lg">Unlock Admin Panel</button>
       </div>
 
-      <!-- Admin Controls Section (Hidden by Default) -->
+      <!-- Admin Controls Section -->
       <div id="admin-panel-section" class="hidden space-y-5">
         <h3 class="font-bold text-lg text-slate-100 border-b border-slate-700 pb-2">Admin Dashboard</h3>
 
@@ -336,12 +348,10 @@
             <h4 class="text-xs font-bold uppercase tracking-wider text-amber-400">Current Menu Items</h4>
             <button onclick="resetMenuToDefault()" class="text-[10px] text-slate-400 hover:text-red-400 underline">Reset to Default Menu</button>
           </div>
-          <div id="admin-menu-list" class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
-            <!-- Dynamic Admin Menu Items -->
-          </div>
+          <div id="admin-menu-list" class="space-y-1.5 max-h-48 overflow-y-auto pr-1"></div>
         </div>
 
-        <!-- Manual Lock / Unlock -->
+        <!-- Manual Lock / Clear -->
         <div class="flex gap-2 pt-3 border-t border-slate-700">
           <button onclick="toggleFormLock()" id="toggle-lock-btn" class="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white text-xs font-bold py-2 rounded-lg">Lock Orders Now</button>
           <button onclick="clearAllOrders()" class="bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-bold px-3 py-2 rounded-lg border border-red-500/30">Clear All Orders</button>
@@ -350,9 +360,8 @@
     </div>
   </div>
 
-  <!-- APPLICATION LOGIC -->
+  <!-- APPLICATION LOGIC WITH REALTIME SYNC -->
   <script>
-    // PRELOADED MENU DATA
     const DEFAULT_MENU = [
       { id: 1, category: "Sandwiches", name: "#1 Special (Mortatella, salami, ham, sausage)", basePrice: 4.00, hasDouble: true },
       { id: 2, category: "Sandwiches", name: "#2 Turbo (Roast pork, haloumi, lountza, sausage)", basePrice: 4.00, hasDouble: true },
@@ -382,26 +391,46 @@
       { id: 26, category: "Salads", name: "#25 Tuna Salad", basePrice: 4.50, hasDouble: false }
     ];
 
-    // STATE MANAGEMENT
-    let menu = JSON.parse(localStorage.getItem('aphrodite_menu')) || DEFAULT_MENU;
-    let orders = JSON.parse(localStorage.getItem('aphrodite_orders')) || [];
+    let menu = DEFAULT_MENU;
+    let ordersMap = {};
     let currentCart = [];
     let isLocked = false;
     let adminPIN = "1234";
 
-    // Set Default Cutoff Time (11:30 AM today)
     let cutoffDate = new Date();
     cutoffDate.setHours(11, 30, 0, 0);
 
-    // INITIALIZATION
     window.onload = function() {
-      populateMenuSelect();
-      handleItemSelectChange();
-      renderOrders();
-      startCountdownTimer();
+      setTimeout(() => {
+        initFirebaseListeners();
+        populateMenuSelect();
+        handleItemSelectChange();
+        startCountdownTimer();
+      }, 500);
     };
 
-    // POPULATE MENU DROPDOWN
+    function initFirebaseListeners() {
+      if (!window.db) return;
+
+      const ordersRef = window.dbRef(window.db, 'orders');
+      window.dbOnValue(ordersRef, (snapshot) => {
+        const data = snapshot.val();
+        ordersMap = data || {};
+        renderOrders();
+      });
+
+      const menuRef = window.dbRef(window.db, 'menu');
+      window.dbOnValue(menuRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          menu = Object.values(data);
+          populateMenuSelect();
+          handleItemSelectChange();
+          renderAdminMenuList();
+        }
+      });
+    }
+
     function populateMenuSelect() {
       const select = document.getElementById('item-select');
       select.innerHTML = '';
@@ -421,7 +450,6 @@
       });
     }
 
-    // HANDLE ITEM CHANGE & UPDATE SIZE DROPDOWN
     function handleItemSelectChange() {
       const itemId = parseInt(document.getElementById('item-select').value);
       const item = menu.find(m => m.id === itemId);
@@ -452,7 +480,6 @@
       updateItemPricePreview();
     }
 
-    // QUANTITY ADJUSTER
     function adjustQty(delta) {
       const input = document.getElementById('item-qty');
       let val = parseInt(input.value) + delta;
@@ -462,14 +489,12 @@
       updateItemPricePreview();
     }
 
-    // CALCULATE SINGLE ITEM TOTAL
     function updateItemPricePreview() {
       const sizeSelect = document.getElementById('size-select');
       const selectedOption = sizeSelect.options[sizeSelect.selectedIndex];
       const basePrice = parseFloat(selectedOption ? selectedOption.getAttribute('data-price') : 0);
       const qty = parseInt(document.getElementById('item-qty').value);
 
-      // Count checked extras
       const extras = document.querySelectorAll('input[name="extra"]:checked');
       const extrasCost = extras.length * 0.50;
 
@@ -477,7 +502,6 @@
       document.getElementById('item-price-preview').textContent = '€' + itemTotal.toFixed(2);
     }
 
-    // ADD ITEM TO STAGING CART
     function addToCart() {
       const itemId = parseInt(document.getElementById('item-select').value);
       const item = menu.find(m => m.id === itemId);
@@ -503,7 +527,6 @@
         totalPrice: itemTotal
       });
 
-      // Reset form controls for next item
       document.getElementById('item-comment').value = '';
       document.querySelectorAll('input[name="extra"]').forEach(cb => cb.checked = false);
       document.getElementById('item-qty').value = 1;
@@ -512,7 +535,6 @@
       updateItemPricePreview();
     }
 
-    // RENDER CART
     function renderCart() {
       const container = document.getElementById('cart-container');
       const itemsList = document.getElementById('cart-items');
@@ -553,7 +575,6 @@
       renderCart();
     }
 
-    // SUBMIT FINAL ORDER
     function submitFinalOrder() {
       const userName = document.getElementById('user-name').value.trim();
       if (!userName) {
@@ -561,7 +582,6 @@
         return;
       }
 
-      const itemId = parseInt(document.getElementById('item-select').value);
       const itemComment = document.getElementById('item-comment').value.trim();
       const hasCheckedExtras = document.querySelectorAll('input[name="extra"]:checked').length > 0;
       const currentQty = parseInt(document.getElementById('item-qty').value);
@@ -575,35 +595,36 @@
         return;
       }
 
-      orders.push({
-        id: Date.now(),
+      const newOrder = {
         person: userName,
-        items: [...currentCart]
-      });
+        items: [...currentCart],
+        timestamp: Date.now()
+      };
 
-      localStorage.setItem('aphrodite_orders', JSON.stringify(orders));
+      if (window.db) {
+        const ordersRef = window.dbRef(window.db, 'orders');
+        window.dbPush(ordersRef, newOrder);
+      }
 
       currentCart = [];
       renderCart();
-      renderOrders();
-      alert("Order submitted successfully!");
+      alert("Order submitted! Synced across all computers.");
     }
 
-    // RENDER ORDERS
     function renderOrders() {
       renderPhoneView();
       renderDistributionView();
     }
 
-    // CALLER VIEW (AGGREGATED)
     function renderPhoneView() {
       const container = document.getElementById('phone-checklist');
       container.innerHTML = '';
 
+      const orderList = Object.values(ordersMap);
       let totalCount = 0;
       let grandTotal = 0;
 
-      if (orders.length === 0) {
+      if (orderList.length === 0) {
         container.innerHTML = `<p class="text-xs text-slate-500 text-center py-6">No orders placed yet.</p>`;
         document.getElementById('total-items-count').textContent = '0';
         document.getElementById('grand-total-price').textContent = '€0.00';
@@ -612,25 +633,21 @@
 
       const aggregated = {};
 
-      orders.forEach(order => {
+      orderList.forEach(order => {
+        if (!order.items) return;
         order.items.forEach(item => {
           totalCount += item.qty;
           grandTotal += item.totalPrice;
 
           const key = `${item.itemName} (${item.size})`;
           if (!aggregated[key]) {
-            aggregated[key] = {
-              name: item.itemName,
-              size: item.size,
-              totalQty: 0,
-              details: []
-            };
+            aggregated[key] = { name: item.itemName, size: item.size, totalQty: 0, details: [] };
           }
 
           aggregated[key].totalQty += item.qty;
           
           let note = `${order.person}: ${item.qty}x`;
-          if (item.extras.length) note += ` +${item.extras.join(',')}`;
+          if (item.extras && item.extras.length) note += ` +${item.extras.join(',')}`;
           if (item.comment) note += ` (${item.comment})`;
           aggregated[key].details.push(note);
         });
@@ -658,17 +675,19 @@
       document.getElementById('grand-total-price').textContent = '€' + grandTotal.toFixed(2);
     }
 
-    // DISTRIBUTION VIEW (BY PERSON)
     function renderDistributionView() {
       const container = document.getElementById('distribution-list');
       container.innerHTML = '';
 
-      if (orders.length === 0) {
+      const entries = Object.entries(ordersMap);
+
+      if (entries.length === 0) {
         container.innerHTML = `<p class="text-xs text-slate-500 text-center py-6">No orders placed yet.</p>`;
         return;
       }
 
-      orders.forEach((order, index) => {
+      entries.forEach(([key, order]) => {
+        if (!order.items) return;
         const orderTotal = order.items.reduce((sum, i) => sum + i.totalPrice, 0);
         const card = document.createElement('div');
         card.className = "p-3 bg-slate-900/80 border border-slate-700/80 rounded-xl space-y-2";
@@ -676,7 +695,7 @@
         let itemsHtml = order.items.map(i => `
           <div class="text-xs border-b border-slate-800 pb-1 last:border-0">
             <span class="font-bold text-slate-200">${i.qty}x ${i.itemName} (${i.size})</span>
-            ${i.extras.length ? `<span class="text-amber-400 block text-[11px]">+ ${i.extras.join(', ')}</span>` : ''}
+            ${i.extras && i.extras.length ? `<span class="text-amber-400 block text-[11px]">+ ${i.extras.join(', ')}</span>` : ''}
             ${i.comment ? `<span class="text-slate-400 block text-[11px] italic">"${i.comment}"</span>` : ''}
           </div>
         `).join('');
@@ -686,7 +705,7 @@
             <span class="font-bold text-sm text-slate-100">${order.person}</span>
             <div class="flex items-center gap-2">
               <span class="font-bold text-xs text-emerald-400">€${orderTotal.toFixed(2)}</span>
-              <button onclick="deleteOrder(${index})" class="text-slate-500 hover:text-red-400 text-xs"><i class="fa-solid fa-trash"></i></button>
+              <button onclick="deleteOrder('${key}')" class="text-slate-500 hover:text-red-400 text-xs"><i class="fa-solid fa-trash"></i></button>
             </div>
           </div>
           <div class="space-y-1">${itemsHtml}</div>
@@ -695,15 +714,15 @@
       });
     }
 
-    function deleteOrder(index) {
+    function deleteOrder(key) {
       if (confirm("Remove this order?")) {
-        orders.splice(index, 1);
-        localStorage.setItem('aphrodite_orders', JSON.stringify(orders));
-        renderOrders();
+        if (window.db) {
+          const itemRef = window.dbRef(window.db, `orders/${key}`);
+          window.dbRemove(itemRef);
+        }
       }
     }
 
-    // TAB SWITCHING
     function switchTab(tab) {
       const phoneBtn = document.getElementById('tab-phone-btn');
       const distBtn = document.getElementById('tab-dist-btn');
@@ -723,7 +742,6 @@
       }
     }
 
-    // COUNTDOWN TIMER
     function startCountdownTimer() {
       setInterval(() => {
         const now = new Date();
@@ -744,21 +762,11 @@
       }, 1000);
     }
 
-    // LIGHTBOX
-    function openLightbox() {
-      document.getElementById('lightbox-modal').classList.remove('hidden');
-    }
-    function closeLightbox() {
-      document.getElementById('lightbox-modal').classList.add('hidden');
-    }
+    function openLightbox() { document.getElementById('lightbox-modal').classList.remove('hidden'); }
+    function closeLightbox() { document.getElementById('lightbox-modal').classList.add('hidden'); }
+    function openAdminModal() { document.getElementById('admin-modal').classList.remove('hidden'); }
+    function closeAdminModal() { document.getElementById('admin-modal').classList.add('hidden'); }
 
-    // ADMIN MODAL & MENU MANAGEMENT
-    function openAdminModal() {
-      document.getElementById('admin-modal').classList.remove('hidden');
-    }
-    function closeAdminModal() {
-      document.getElementById('admin-modal').classList.add('hidden');
-    }
     function verifyAdminPIN() {
       const pin = document.getElementById('admin-pin-input').value;
       if (pin === adminPIN) {
@@ -781,7 +789,7 @@
           <div class="truncate pr-2">
             <span class="font-bold text-amber-400">[${item.category}]</span> 
             <span class="text-slate-200">${item.name}</span>
-            <span class="text-slate-400 block text-[10px]">€${item.basePrice.toFixed(2)} ${item.hasDouble ? '(Single/Double)' : ''}</span>
+            <span class="text-slate-400 block text-[10px]">€${item.basePrice.toFixed(2)}</span>
           </div>
           <div class="flex items-center gap-1.5 shrink-0">
             <button onclick="editAdminMenuItem(${item.id})" class="text-slate-400 hover:text-amber-400 p-1"><i class="fa-solid fa-pen"></i></button>
@@ -819,25 +827,18 @@
       if (editId) {
         const item = menu.find(m => m.id === parseInt(editId));
         if (item) {
-          item.category = category;
-          item.name = name;
-          item.basePrice = basePrice;
-          item.hasDouble = hasDouble;
-          item.isFries = isFries;
+          item.category = category; item.name = name; item.basePrice = basePrice;
+          item.hasDouble = hasDouble; item.isFries = isFries;
         }
       } else {
-        const newItem = {
-          id: Date.now(),
-          category,
-          name,
-          basePrice,
-          hasDouble,
-          isFries
-        };
-        menu.push(newItem);
+        menu.push({ id: Date.now(), category, name, basePrice, hasDouble, isFries });
       }
 
-      localStorage.setItem('aphrodite_menu', JSON.stringify(menu));
+      if (window.db) {
+        const menuRef = window.dbRef(window.db, 'menu');
+        window.dbSet(menuRef, menu);
+      }
+
       populateMenuSelect();
       handleItemSelectChange();
       renderAdminMenuList();
@@ -848,7 +849,10 @@
     function deleteAdminMenuItem(id) {
       if (confirm("Delete this menu item?")) {
         menu = menu.filter(m => m.id !== id);
-        localStorage.setItem('aphrodite_menu', JSON.stringify(menu));
+        if (window.db) {
+          const menuRef = window.dbRef(window.db, 'menu');
+          window.dbSet(menuRef, menu);
+        }
         populateMenuSelect();
         handleItemSelectChange();
         renderAdminMenuList();
@@ -865,13 +869,16 @@
     }
 
     function resetMenuToDefault() {
-      if (confirm("Reset menu items back to default Aphrodite's Snacks menu?")) {
+      if (confirm("Reset menu items back to default?")) {
         menu = [...DEFAULT_MENU];
-        localStorage.setItem('aphrodite_menu', JSON.stringify(menu));
+        if (window.db) {
+          const menuRef = window.dbRef(window.db, 'menu');
+          window.dbSet(menuRef, menu);
+        }
         populateMenuSelect();
         handleItemSelectChange();
         renderAdminMenuList();
-        alert("Menu reset to default!");
+        alert("Menu reset!");
       }
     }
 
@@ -893,24 +900,19 @@
 
     function toggleFormLock() {
       isLocked = !isLocked;
-      const overlay = document.getElementById('form-locked-overlay');
-      if (isLocked) {
-        overlay.classList.remove('hidden');
-      } else {
-        overlay.classList.add('hidden');
-      }
+      document.getElementById('form-locked-overlay').classList.toggle('hidden', !isLocked);
     }
 
     function clearAllOrders() {
       if (confirm("Are you sure you want to clear all orders?")) {
-        orders = [];
-        localStorage.removeItem('aphrodite_orders');
-        renderOrders();
+        if (window.db) {
+          const ordersRef = window.dbRef(window.db, 'orders');
+          window.dbSet(ordersRef, null);
+        }
         closeAdminModal();
       }
     }
 
-    // COPY PHONE SCRIPT
     function copyPhoneScript() {
       let script = "Aphrodite's Snacks Order:\n\n";
       const checklist = document.querySelectorAll('#phone-checklist .p-3');

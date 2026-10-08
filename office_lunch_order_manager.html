@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-900 text-slate-100">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Office Lunch Order Manager</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0fdf4',
+              100: '#dcfce7',
+              500: '#22c55e',
+              600: '#16a34a',
+              700: '#15803d',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .glass-card {
+      background: rgba(30, 41, 59, 0.7);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .timer-glow {
+      box-shadow: 0 0 25px rgba(22, 163, 74, 0.25);
+    }
+    .timer-glow-expired {
+      box-shadow: 0 0 25px rgba(225, 29, 72, 0.25);
+    }
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.6);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(51, 65, 85, 0.8);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(71, 85, 105, 1);
+    }
+  </style>
+</head>
+<body class="h-full flex flex-col font-sans antialiased text-slate-200 selection:bg-brand-500 selection:text-white">
+
+  <header class="sticky top-0 z-40 border-b border-slate-800 bg-slate-900/90 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="p-2 bg-gradient-to-tr from-brand-600 to-emerald-400 rounded-xl shadow-lg">
+          <i data-lucide="utensils" class="w-6 h-6 text-slate-950 stroke-[2.5]"></i>
+        </div>
+        <div>
+          <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+            Lunch Call Hub
+            <span class="text-xs font-normal px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">GitHub Pages Ready</span>
+          </h1>
+          <p class="text-xs text-slate-400">Streamlined office food orders & caller dashboard</p>
+        </div>
+      </div>
+
+      <!-- Action Utilities Header -->
+      <div class="flex items-center space-x-2">
+        <button id="copyScriptBtn" onclick="copyCallScript()" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition flex items-center gap-1.5 shadow-sm">
+          <i data-lucide="copy" class="w-3.5 h-3.5 text-brand-500"></i>
+          <span class="hidden sm:inline">Copy Phone Script</span>
+        </button>
+        <button onclick="toggleAdminModal(true)" class="p-2 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition" title="Settings & Admin Controls">
+          <i data-lucide="settings" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+    <!-- Big Countdown Banner -->
+    <div id="timerBanner" class="relative overflow-hidden rounded-2xl glass-card p-6 sm:p-8 border border-slate-800 transition-all duration-300 timer-glow">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        
+        <div class="space-y-1">
+          <div class="flex items-center gap-2">
+            <span id="statusBadge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-brand-500/10 text-brand-400 border border-brand-500/20">
+              <span class="w-2 h-2 rounded-full bg-brand-500 animate-pulse"></span>
+              Accepting Orders
+            </span>
+            <span id="cutoffTimeDisplay" class="text-xs text-slate-400">Cutoff: Today at 11:30 AM</span>
+          </div>
+          <h2 class="text-xl sm:text-2xl font-bold text-white tracking-tight">Time Remaining to Order</h2>
+          <p class="text-xs text-slate-400">Please make sure your order and custom notes are submitted before the timer hits zero!</p>
+        </div>
+
+        <!-- Timer Digital Display -->
+        <div class="flex items-center justify-center gap-3 bg-slate-950/60 p-4 rounded-xl border border-slate-800/80">
+          <div class="text-center">
+            <span id="timerHours" class="block font-mono text-3xl sm:text-4xl font-extrabold text-white">00</span>
+            <span class="text-[10px] uppercase tracking-wider text-slate-500 font-semibold">Hours</span>
+          </div>
+          <span class="font-mono text-2xl font-bold text-slate-600 mb-4">:</span>
+          <div class="text-center">
+            <span id="timerMinutes" class="block font-mono text-3xl sm:text-4xl font-extrabold text-white">00</span>
+            <span class="text-[10px] uppercase tracking-wider text-slate-500 font-semibold">Mins</span>
+          </div>
+          <span class="font-mono text-2xl font-bold text-slate-600 mb-4">:</span>
+          <div class="text-center">
+            <span id="timerSeconds" class="block font-mono text-3xl sm:text-4xl font-extrabold text-brand-400">00</span>
+            <span class="text-[10px] uppercase tracking-wider text-slate-500 font-semibold">Secs</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+      <!-- LEFT COLUMN: Order Submission Form -->
+      <section class="lg:col-span-5 glass-card rounded-2xl p-6 border border-slate-800">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold text-white flex items-center gap-2">
+            <i data-lucide="plus-circle" class="w-5 h-5 text-brand-500"></i>
+            Place Your Order
+          </h3>
+          <span class="text-xs text-slate-400">* Required fields</span>
+        </div>
+
+        <form id="orderForm" onsubmit="handleOrderSubmit(event)" class="space-y-4">
+          <input type="hidden" id="editOrderId" value="">
+
+          <!-- Name Input -->
+          <div>
+            <label for="userName" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+              Your Name *
+            </label>
+            <div class="relative">
+              <input 
+                type="text" 
+                id="userName" 
+                required 
+                placeholder="e.g. Sarah Jenkins" 
+                class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition"
+              >
+              <i data-lucide="user" class="w-4 h-4 text-slate-500 absolute right-3 top-3"></i>
+            </div>
+          </div>
+
+          <!-- Item Selection & Custom Entry -->
+          <div>
+            <label for="itemSelect" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+              Select Item *
+            </label>
+            <select 
+              id="itemSelect" 
+              onchange="handleItemSelectChange()" 
+              class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition mb-2"
+            >
+              <!-- Populated dynamically -->
+            </select>
+
+            <!-- Custom Item Input (Shown when "Custom Item..." is selected) -->
+            <div id="customItemContainer" class="hidden">
+              <input 
+                type="text" 
+                id="customItemName" 
+                placeholder="Type item name (e.g. Falafel Wrap)" 
+                class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition"
+              >
+            </div>
+          </div>
+
+          <!-- Quantity & Details -->
+          <div class="grid grid-cols-3 gap-3">
+            <div class="col-span-1">
+              <label for="itemQty" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+                Qty *
+              </label>
+              <input 
+                type="number" 
+                id="itemQty" 
+                min="1" 
+                max="20" 
+                value="1" 
+                required 
+                class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition font-semibold text-center"
+              >
+            </div>
+
+            <div class="col-span-2">
+              <label for="itemCategory" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+                Category
+              </label>
+              <select 
+                id="itemCategory" 
+                class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition"
+              >
+                <option value="Mains">Mains</option>
+                <option value="Sides">Sides</option>
+                <option value="Drinks">Drinks</option>
+                <option value="Dessert">Dessert</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Special Comments / Modifications -->
+          <div>
+            <label for="itemComments" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+              Special Instructions / Comments
+            </label>
+            <textarea 
+              id="itemComments" 
+              rows="2" 
+              placeholder="e.g. No tomato, dressing on the side, extra spicy..." 
+              class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition resize-none"
+            ></textarea>
+          </div>
+
+          <!-- Form Buttons -->
+          <div class="pt-2 flex items-center gap-2">
+            <button 
+              type="submit" 
+              id="submitOrderBtn" 
+              class="flex-1 bg-brand-600 hover:bg-brand-500 text-white font-semibold py-3 px-4 rounded-xl shadow-lg transition duration-200 flex items-center justify-center gap-2 text-sm"
+            >
+              <i data-lucide="send" class="w-4 h-4"></i>
+              <span id="submitBtnText">Submit Order</span>
+            </button>
+            <button 
+              type="button" 
+              id="cancelEditBtn" 
+              onclick="cancelEdit()" 
+              class="hidden px-4 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-medium rounded-xl border border-slate-700 transition"
+            >
+              Cancel
+            </button>
+          </div>
+          
+          <p id="formClosedNotice" class="hidden text-xs text-rose-400 font-medium text-center pt-2">
+            ⚠️ Ordering is currently locked because the cutoff time has passed.
+          </p>
+        </form>
+      </section>
+
+      <!-- RIGHT COLUMN: Dashboard & Live Summary Views -->
+      <section class="lg:col-span-7 glass-card rounded-2xl p-6 border border-slate-800 flex flex-col min-h-[500px]">
+        
+        <!-- Header & View Toggles -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+          <div>
+            <h3 class="text-lg font-semibold text-white flex items-center gap-2">
+              <i data-lucide="clipboard-list" class="w-5 h-5 text-brand-500"></i>
+              Office Lunch Summary
+            </h3>
+            <p class="text-xs text-slate-400">Total Items: <span id="totalItemsCount" class="font-bold text-white">0</span> | Total People: <span id="totalPeopleCount" class="font-bold text-white">0</span></p>
+          </div>
+
+          <!-- View Tabs -->
+          <div class="flex p-1 bg-slate-950 rounded-xl border border-slate-800/80">
+            <button 
+              id="tabCaller" 
+              onclick="switchTab('caller')" 
+              class="px-3 py-1.5 text-xs font-semibold rounded-lg transition flex items-center gap-1.5 bg-brand-600 text-white shadow"
+            >
+              <i data-lucide="phone-call" class="w-3.5 h-3.5"></i>
+              Phone Order Summary
+            </button>
+            <button 
+              id="tabIndividual" 
+              onclick="switchTab('individual')" 
+              class="px-3 py-1.5 text-xs font-semibold rounded-lg transition flex items-center gap-1.5 text-slate-400 hover:text-white"
+            >
+              <i data-lucide="users" class="w-3.5 h-3.5"></i>
+              Individual Orders
+            </button>
+          </div>
+        </div>
+
+        <!-- TAB 1: PHONE ORDER AGGREGATED VIEW -->
+        <div id="viewCaller" class="space-y-4 pt-4 flex-1">
+          <div class="flex items-center justify-between bg-slate-950/50 p-2.5 rounded-xl border border-slate-800 text-xs text-slate-400">
+            <span class="flex items-center gap-1.5">
+              <i data-lucide="check-square" class="w-4 h-4 text-brand-500"></i>
+              Check off items as you order them on the phone
+            </span>
+            <button onclick="resetCallerCheckboxes()" class="hover:text-white underline text-[11px]">Clear Checkmarks</button>
+          </div>
+
+          <div id="callerSummaryList" class="space-y-3">
+            <!-- Dynamic Content -->
+          </div>
+        </div>
+
+        <!-- TAB 2: INDIVIDUAL ORDERS DISTRIBUTION VIEW -->
+        <div id="viewIndividual" class="hidden space-y-4 pt-4 flex-1">
+          <div class="flex items-center justify-between mb-2">
+            <input 
+              type="text" 
+              id="searchOrdersInput" 
+              oninput="renderIndividualOrders()" 
+              placeholder="Filter by person or item..." 
+              class="w-full sm:w-64 bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+            >
+            <span class="text-xs text-slate-500 hidden sm:inline">Click edit on your row to modify</span>
+          </div>
+
+          <div id="individualOrdersList" class="space-y-3">
+            <!-- Dynamic Content -->
+          </div>
+        </div>
+
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Admin & Settings Modal -->
+  <div id="adminModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="glass-card max-w-md w-full rounded-2xl p-6 border border-slate-800 space-y-5">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 class="text-lg font-bold text-white flex items-center gap-2">
+          <i data-lucide="sliders" class="w-5 h-5 text-brand-500"></i>
+          Admin & Setup Controls
+        </h3>
+        <button onclick="toggleAdminModal(false)" class="text-slate-400 hover:text-white">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Cutoff Time Configuration -->
+      <div class="space-y-2">
+        <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider">Set Today's Cutoff Time</label>
+        <div class="flex items-center gap-2">
+          <input 
+            type="time" 
+            id="adminCutoffInput" 
+            class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-brand-500 flex-1"
+          >
+          <button onclick="updateCutoffTime()" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold rounded-xl transition">
+            Set Time
+          </button>
+        </div>
+      </div>
+
+      <!-- Preset Items Customization -->
+      <div class="space-y-2">
+        <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider">Preset Menu Items (Comma Separated)</label>
+        <textarea 
+          id="adminMenuItemsInput" 
+          rows="3" 
+          class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-brand-500 resize-none"
+        ></textarea>
+        <button onclick="saveMenuItems()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium rounded-lg border border-slate-700 transition">
+          Update Menu Items
+        </button>
+      </div>
+
+      <!-- Emergency Lock Toggle -->
+      <div class="pt-2 border-t border-slate-800 flex items-center justify-between">
+        <div>
+          <span class="block text-sm font-semibold text-white">Manual Form Lock</span>
+          <span class="text-xs text-slate-400">Lock orders regardless of timer</span>
+        </div>
+        <button id="manualLockToggle" onclick="toggleManualLock()" class="px-3 py-1.5 text-xs font-semibold rounded-xl bg-slate-800 text-slate-300 border border-slate-700">
+          Unlocked
+        </button>
+      </div>
+
+      <!-- Clear Data -->
+      <div class="pt-2 border-t border-slate-800 flex items-center justify-between">
+        <div>
+          <span class="block text-sm font-semibold text-rose-400">Reset Session</span>
+          <span class="text-xs text-slate-500">Deletes all current orders for today</span>
+        </div>
+        <button onclick="clearAllOrders()" class="px-3 py-1.5 text-xs font-semibold rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 transition">
+          Clear All Orders
+        </button>
+      </div>
+
+      <div class="pt-2">
+        <button onclick="toggleAdminModal(false)" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl border border-slate-700 transition">
+          Close Settings
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Toast -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-slate-800 border border-slate-700 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3">
+    <i id="toastIcon" data-lucide="check-circle" class="w-5 h-5 text-brand-500"></i>
+    <span id="toastMessage" class="text-xs font-medium">Notification message</span>
+  </div>
+
+  <script>
+    // --- Application State ---
+    const DEFAULT_ITEMS = [
+      "Classic Cheeseburger",
+      "Chicken Caesar Wrap",
+      "Falafel & Hummus Bowl",
+      "Margherita Pizza",
+      "Fries (Side)",
+      "Sparkling Water",
+      "Custom Item..."
+    ];
+
+    let state = {
+      orders: [],
+      menuItems: [...DEFAULT_ITEMS],
+      cutoffTime: null, // Date object
+      manualLocked: false,
+      checkedCallerItems: {}, // Track checked state for caller view
+      currentTab: 'caller'
+    };
+
+    let timerInterval = null;
+
+    // --- Initialization ---
+    window.addEventListener('DOMContentLoaded', () => {
+      loadStateFromStorage();
+      setupCutoffTimeIfNeeded();
+      populateMenuDropdown();
+      startTimer();
+      renderAll();
+      lucide.createIcons();
+    });
+
+    // --- Local Storage Sync ---
+    function loadStateFromStorage() {
+      const stored = localStorage.getItem('office_lunch_app_data');
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          state.orders = parsed.orders || [];
+          state.menuItems = parsed.menuItems || [...DEFAULT_ITEMS];
+          state.manualLocked = !!parsed.manualLocked;
+          state.checkedCallerItems = parsed.checkedCallerItems || {};
+          if (parsed.cutoffTimeString) {
+            state.cutoffTime = new Date(parsed.cutoffTimeString);
+          }
+        } catch (e) {
+          console.error('Failed to parse state from localStorage', e);
+        }
+      }
+    }
+
+    function saveStateToStorage() {
+      const dataToSave = {
+        orders: state.orders,
+        menuItems: state.menuItems,
+        manualLocked: state.manualLocked,
+        checkedCallerItems: state.checkedCallerItems,
+        cutoffTimeString: state.cutoffTime ? state.cutoffTime.toISOString() : null
+      };
+      localStorage.setItem('office_lunch_app_data', JSON.stringify(dataToSave));
+    }
+
+    // --- Cutoff Time Logic ---
+    function setupCutoffTimeIfNeeded() {
+      if (!state.cutoffTime || isNaN(state.cutoffTime.getTime()) || state.cutoffTime < new Date(new Date().setHours(0,0,0,0))) {
+        // Default cutoff: Today at 11:30 AM
+        const now = new Date();
+        const defaultCutoff = new Date();
+        defaultCutoff.setHours(11, 30, 0, 0);
+
+        // If 11:30 AM has already passed today, set to 1 hour from now for demo purposes
+        if (now > defaultCutoff) {
+          defaultCutoff.setTime(now.getTime() + 60 * 60 * 1000);
+        }
+        state.cutoffTime = defaultCutoff;
+        saveStateToStorage();
+      }
+
+      // Sync Admin Time Input field
+      const hours = String(state.cutoffTime.getHours()).padStart(2, '0');
+      const minutes = String(state.cutoffTime.getMinutes()).padStart(2, '0');
+      document.getElementById('adminCutoffInput').value = `${hours}:${minutes}`;
+      updateCutoffTimeDisplay();
+    }
+
+    function updateCutoffTimeDisplay() {
+      if (!state.cutoffTime) return;
+      const timeStr = state.cutoffTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      document.getElementById('cutoffTimeDisplay').textContent = `Cutoff: Today at ${timeStr}`;
+    }
+
+    // --- Timer Engine ---
+    function startTimer() {
+      if (timerInterval) clearInterval(timerInterval);
+
+      function update() {
+        const now = new Date();
+        const diff = state.cutoffTime - now;
+
+        const banner = document.getElementById('timerBanner');
+        const badge = document.getElementById('statusBadge');
+        const submitBtn = document.getElementById('submitOrderBtn');
+        const closedNotice = document.getElementById('formClosedNotice');
+
+        if (diff <= 0 || state.manualLocked) {
+          // EXPIRED OR LOCKED
+          document.getElementById('timerHours').textContent = '00';
+          document.getElementById('timerMinutes').textContent = '00';
+          document.getElementById('timerSeconds').textContent = '00';
+
+          banner.classList.remove('timer-glow');
+          banner.classList.add('timer-glow-expired', 'border-rose-500/30');
+
+          badge.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20";
+          badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-500"></span> ORDERING CLOSED`;
+
+          submitBtn.disabled = true;
+          submitBtn.classList.add('opacity-50', 'cursor-not-allowed', 'hover:bg-brand-600');
+          closedNotice.classList.remove('hidden');
+        } else {
+          // ACTIVE
+          const hours = Math.floor(diff / (1000 * 60 * 60));
+          const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+          const secs = Math.floor((diff % (1000 * 60)) / 1000);
+
+          document.getElementById('timerHours').textContent = String(hours).padStart(2, '0');
+          document.getElementById('timerMinutes').textContent = String(mins).padStart(2, '0');
+          document.getElementById('timerSeconds').textContent = String(secs).padStart(2, '0');
+
+          banner.classList.remove('timer-glow-expired', 'border-rose-500/30');
+          banner.classList.add('timer-glow');
+
+          badge.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-brand-500/10 text-brand-400 border border-brand-500/20";
+          badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-brand-500 animate-pulse"></span> Accepting Orders`;
+
+          submitBtn.disabled = false;
+          submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+          closedNotice.classList.add('hidden');
+        }
+      }
+
+      update();
+      timerInterval = setInterval(update, 1000);
+    }
+
+    // --- Dropdown Management ---
+    function populateMenuDropdown() {
+      const select = document.getElementById('itemSelect');
+      select.innerHTML = '';
+      state.menuItems.forEach(item => {
+        const opt = document.createElement('option');
+        opt.value = item;
+        opt.textContent = item;
+        select.appendChild(opt);
+      });
+      
+      // Update admin textarea
+      document.getElementById('adminMenuItemsInput').value = state.menuItems.join(', ');
+      handleItemSelectChange();
+    }
+
+    function handleItemSelectChange() {
+      const select = document.getElementById('itemSelect');
+      const customContainer = document.getElementById('customItemContainer');
+      const customInput = document.getElementById('customItemName');
+
+      if (select.value === "Custom Item...") {
+        customContainer.classList.remove('hidden');
+        customInput.required = true;
+      } else {
+        customContainer.classList.add('hidden');
+        customInput.required = false;
+      }
+    }
+
+    // --- STREAMING_CHUNK:Handling form submission & order editing... ---
+    function handleOrderSubmit(e) {
+      e.preventDefault();
+
+      // Check timer lock
+      if (new Date() >= state.cutoffTime || state.manualLocked) {
+        showToast("Ordering is locked!", "error");
+        return;
+      }
+
+      const name = document.getElementById('userName').value.trim();
+      const selectVal = document.getElementById('itemSelect').value;
+      const customVal = document.getElementById('customItemName').value.trim();
+      const qty = parseInt(document.getElementById('itemQty').value, 10) || 1;
+      const category = document.getElementById('itemCategory').value;
+      const comments = document.getElementById('itemComments').value.trim();
+      const editId = document.getElementById('editOrderId').value;
+
+      const finalItemName = (selectVal === "Custom Item...") ? customVal : selectVal;
+
+      if (!name || !finalItemName) {
+        showToast("Please complete required fields", "error");
+        return;
+      }
+
+      if (editId) {
+        // Edit Existing Order
+        const index = state.orders.findIndex(o => o.id === editId);
+        if (index !== -1) {
+          state.orders[index] = {
+            ...state.orders[index],
+            name,
+            item: finalItemName,
+            qty,
+            category,
+            comments,
+            updatedAt: new Date().toISOString()
+          };
+          showToast("Order updated successfully!");
+        }
+      } else {
+        // Create New Order
+        const newOrder = {
+          id: 'ord_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+          name,
+          item: finalItemName,
+          qty,
+          category,
+          comments,
+          createdAt: new Date().toISOString()
+        };
+        state.orders.push(newOrder);
+        showToast(`Order added for ${name}!`);
+      }
+
+      saveStateToStorage();
+      resetForm();
+      renderAll();
+    }
+
+    function editOrder(id) {
+      const order = state.orders.find(o => o.id === id);
+      if (!order) return;
+
+      document.getElementById('editOrderId').value = order.id;
+      document.getElementById('userName').value = order.name;
+      document.getElementById('itemQty').value = order.qty;
+      document.getElementById('itemCategory').value = order.category;
+      document.getElementById('itemComments').value = order.comments || '';
+
+      const select = document.getElementById('itemSelect');
+      if (state.menuItems.includes(order.item)) {
+        select.value = order.item;
+        document.getElementById('customItemContainer').classList.add('hidden');
+      } else {
+        select.value = "Custom Item...";
+        document.getElementById('customItemContainer').classList.remove('hidden');
+        document.getElementById('customItemName').value = order.item;
+      }
+
+      document.getElementById('submitBtnText').textContent = "Update Order";
+      document.getElementById('cancelEditBtn').classList.remove('hidden');
+
+      // Scroll form into view on mobile
+      document.getElementById('orderForm').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function cancelEdit() {
+      resetForm();
+    }
+
+    function deleteOrder(id) {
+      if (confirm("Are you sure you want to remove this order?")) {
+        state.orders = state.orders.filter(o => o.id !== id);
+        saveStateToStorage();
+        renderAll();
+        showToast("Order removed");
+      }
+    }
+
+    function resetForm() {
+      document.getElementById('editOrderId').value = '';
+      document.getElementById('orderForm').reset();
+      document.getElementById('itemQty').value = 1;
+      document.getElementById('submitBtnText').textContent = "Submit Order";
+      document.getElementById('cancelEditBtn').classList.add('hidden');
+      handleItemSelectChange();
+    }
+
+    // --- STREAMING_CHUNK:Rendering Dashboard Tab 1 (Aggregated Phone View)... ---
+    function renderAll() {
+      renderCounts();
+      renderCallerSummary();
+      renderIndividualOrders();
+      lucide.createIcons();
+    }
+
+    function renderCounts() {
+      const totalItems = state.orders.reduce((sum, o) => sum + o.qty, 0);
+      const uniquePeople = new Set(state.orders.map(o => o.name.toLowerCase().trim())).size;
+
+      document.getElementById('totalItemsCount').textContent = totalItems;
+      document.getElementById('totalPeopleCount').textContent = uniquePeople;
+    }
+
+    function renderCallerSummary() {
+      const container = document.getElementById('callerSummaryList');
+      container.innerHTML = '';
+
+      if (state.orders.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-12 border border-dashed border-slate-800 rounded-2xl">
+            <i data-lucide="shopping-bag" class="w-10 h-10 text-slate-600 mx-auto mb-2"></i>
+            <p class="text-sm font-medium text-slate-400">No orders placed yet.</p>
+            <p class="text-xs text-slate-600">Items will automatically group here for easy calling!</p>
+          </div>
+        `;
+        return;
+      }
+
+      // Group orders by item name
+      const grouped = {};
+      state.orders.forEach(o => {
+        const itemKey = o.item.trim();
+        if (!grouped[itemKey]) {
+          grouped[itemKey] = {
+            totalQty: 0,
+            category: o.category,
+            details: []
+          };
+        }
+        grouped[itemKey].totalQty += o.qty;
+        grouped[itemKey].details.push({
+          name: o.name,
+          qty: o.qty,
+          comments: o.comments
+        });
+      });
+
+      // Render grouped card list
+      Object.keys(grouped).forEach((itemName, idx) => {
+        const itemData = grouped[itemName];
+        const isChecked = !!state.checkedCallerItems[itemName];
+
+        const card = document.createElement('div');
+        card.className = `p-4 rounded-xl border transition-all ${
+          isChecked 
+            ? 'bg-slate-950/40 border-slate-800/50 opacity-60' 
+            : 'bg-slate-900/80 border-slate-800 hover:border-slate-700'
+        }`;
+
+        // Generate line items with names & comments
+        const detailsHtml = itemData.details.map(d => {
+          const commentBadge = d.comments 
+            ? `<span class="ml-2 px-2 py-0.5 text-[11px] font-medium rounded-md bg-amber-500/10 text-amber-300 border border-amber-500/20"> Note: "${escapeHtml(d.comments)}"</span>` 
+            : '';
+          return `<div class="text-xs text-slate-300 py-1 border-b border-slate-800/40 last:border-0 flex items-start justify-between">
+            <span class="font-medium text-slate-200">${escapeHtml(d.name)} <span class="text-slate-400 font-normal">(x${d.qty})</span></span>
+            ${commentBadge}
+          </div>`;
+        }).join('');
+
+        card.innerHTML = `
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex items-start gap-3">
+              <input 
+                type="checkbox" 
+                ${isChecked ? 'checked' : ''} 
+                onchange="toggleCallerCheck('${escapeJsString(itemName)}', this.checked)"
+                class="mt-1 w-4 h-4 rounded border-slate-700 text-brand-600 focus:ring-brand-500 bg-slate-950 cursor-pointer"
+              >
+              <div>
+                <div class="flex items-center gap-2">
+                  <h4 class="text-base font-bold text-white ${isChecked ? 'line-through text-slate-500' : ''}">
+                    ${escapeHtml(itemName)}
+                  </h4>
+                  <span class="px-2 py-0.5 text-[10px] uppercase font-semibold rounded-full bg-slate-800 text-slate-400 border border-slate-700">
+                    ${escapeHtml(itemData.category || 'Mains')}
+                  </span>
+                </div>
+                <p class="text-xs text-slate-400 mt-0.5">Total Quantity to order</p>
+              </div>
+            </div>
+
+            <div class="px-3 py-1 bg-brand-500/10 border border-brand-500/20 rounded-xl text-brand-400 font-mono text-lg font-bold">
+              x${itemData.totalQty}
+            </div>
+          </div>
+
+          <div class="mt-3 pl-7 pt-2 border-t border-slate-800/60 bg-slate-950/40 rounded-lg p-2.5">
+            <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Sub-Breakdown & Notes:</p>
+            ${detailsHtml}
+          </div>
+        `;
+
+        container.appendChild(card);
+      });
+    }
+
+    function toggleCallerCheck(itemName, checked) {
+      state.checkedCallerItems[itemName] = checked;
+      saveStateToStorage();
+      renderCallerSummary();
+    }
+
+    function resetCallerCheckboxes() {
+      state.checkedCallerItems = {};
+      saveStateToStorage();
+      renderCallerSummary();
+      showToast("Checkmarks cleared!");
+    }
+
+    // --- STREAMING_CHUNK:Rendering Dashboard Tab 2 (Individual Distribution View)... ---
+    function renderIndividualOrders() {
+      const container = document.getElementById('individualOrdersList');
+      const searchTerm = (document.getElementById('searchOrdersInput')?.value || '').toLowerCase();
+      container.innerHTML = '';
+
+      const filtered = state.orders.filter(o => 
+        o.name.toLowerCase().includes(searchTerm) || 
+        o.item.toLowerCase().includes(searchTerm) ||
+        (o.comments && o.comments.toLowerCase().includes(searchTerm))
+      );
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-12 border border-dashed border-slate-800 rounded-2xl">
+            <p class="text-sm font-medium text-slate-400">No matching individual orders found.</p>
+          </div>
+        `;
+        return;
+      }
+
+      // Sort alphabetically by Name
+      filtered.sort((a, b) => a.name.localeCompare(b.name));
+
+      filtered.forEach(o => {
+        const card = document.createElement('div');
+        card.className = "p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 flex items-center justify-between gap-3 hover:border-slate-700 transition";
+
+        card.innerHTML = `
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-sm text-brand-400 uppercase">
+              ${o.name.charAt(0)}
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="text-sm font-semibold text-white">${escapeHtml(o.name)}</span>
+                <span class="text-xs font-mono font-bold text-brand-400 bg-brand-500/10 px-2 py-0.5 rounded border border-brand-500/20">
+                  x${o.qty}
+                </span>
+              </div>
+              <p class="text-xs text-slate-300 font-medium mt-0.5">${escapeHtml(o.item)}</p>
+              ${o.comments ? `<p class="text-[11px] text-amber-300 italic mt-0.5">"${escapeHtml(o.comments)}"</p>` : ''}
+            </div>
+          </div>
+
+          <div class="flex items-center gap-1">
+            <button 
+              onclick="editOrder('${o.id}')" 
+              class="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition"
+              title="Edit Order"
+            >
+              <i data-lucide="edit-2" class="w-4 h-4"></i>
+            </button>
+            <button 
+              onclick="deleteOrder('${o.id}')" 
+              class="p-1.5 text-slate-400 hover:text-rose-400 rounded-lg hover:bg-slate-800 transition"
+              title="Delete Order"
+            >
+              <i data-lucide="trash-2" class="w-4 h-4"></i>
+            </button>
+          </div>
+        `;
+
+        container.appendChild(card);
+      });
+    }
+
+    // --- STREAMING_CHUNK:Tab switching logic & Phone script generator... ---
+    function switchTab(tab) {
+      state.currentTab = tab;
+      const callerBtn = document.getElementById('tabCaller');
+      const individualBtn = document.getElementById('tabIndividual');
+      const callerVal = document.getElementById('viewCaller');
+      const indivVal = document.getElementById('viewIndividual');
+
+      if (tab === 'caller') {
+        callerBtn.className = "px-3 py-1.5 text-xs font-semibold rounded-lg transition flex items-center gap-1.5 bg-brand-600 text-white shadow";
+        individualBtn.className = "px-3 py-1.5 text-xs font-semibold rounded-lg transition flex items-center gap-1.5 text-slate-400 hover:text-white";
+        callerVal.classList.remove('hidden');
+        indivVal.classList.add('hidden');
+      } else {
+        individualBtn.className = "px-3 py-1.5 text-xs font-semibold rounded-lg transition flex items-center gap-1.5 bg-brand-600 text-white shadow";
+        callerBtn.className = "px-3 py-1.5 text-xs font-semibold rounded-lg transition flex items-center gap-1.5 text-slate-400 hover:text-white";
+        indivVal.classList.remove('hidden');
+        callerVal.classList.add('hidden');
+      }
+    }
+
+    function copyCallScript() {
+      if (state.orders.length === 0) {
+        showToast("No orders available to copy!", "error");
+        return;
+      }
+
+      // Group items
+      const grouped = {};
+      state.orders.forEach(o => {
+        const itemKey = o.item.trim();
+        if (!grouped[itemKey]) {
+          grouped[itemKey] = { totalQty: 0, details: [] };
+        }
+        grouped[itemKey].totalQty += o.qty;
+        if (o.comments) {
+          grouped[itemKey].details.push(`${o.qty}x with "${o.comments}" (${o.name})`);
+        }
+      });
+
+      let scriptText = `📞 OFFICE LUNCH ORDER SUMMARY (${new Date().toLocaleDateString()})\n\n`;
+      Object.keys(grouped).forEach(item => {
+        const g = grouped[item];
+        scriptText += `• ${g.totalQty}x ${item}\n`;
+        if (g.details.length > 0) {
+          g.details.forEach(note => {
+            scriptText += `   - Note: ${note}\n`;
+          });
+        }
+      });
+
+      scriptText += `\nTotal Items: ${state.orders.reduce((sum, o) => sum + o.qty, 0)}`;
+
+      // Fallback copy execCommand for iframe compatibility
+      const tempTextArea = document.createElement('textarea');
+      tempTextArea.value = scriptText;
+      document.body.appendChild(tempTextArea);
+      tempTextArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(tempTextArea);
+
+      showToast("Phone script copied to clipboard!");
+    }
+
+    // --- STREAMING_CHUNK:Admin settings and modal controls... ---
+    function toggleAdminModal(show) {
+      const modal = document.getElementById('adminModal');
+      if (show) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      } else {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    }
+
+    function updateCutoffTime() {
+      const timeVal = document.getElementById('adminCutoffInput').value;
+      if (!timeVal) return;
+
+      const [hours, minutes] = timeVal.split(':');
+      const newCutoff = new Date();
+      newCutoff.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
+
+      state.cutoffTime = newCutoff;
+      saveStateToStorage();
+      updateCutoffTimeDisplay();
+      startTimer();
+      showToast("Cutoff time updated!");
+      toggleAdminModal(false);
+    }
+
+    function saveMenuItems() {
+      const raw = document.getElementById('adminMenuItemsInput').value;
+      const items = raw.split(',').map(s => s.trim()).filter(Boolean);
+      if (!items.includes("Custom Item...")) {
+        items.push("Custom Item...");
+      }
+      state.menuItems = items;
+      saveStateToStorage();
+      populateMenuDropdown();
+      showToast("Menu presets updated!");
+    }
+
+    function toggleManualLock() {
+      state.manualLocked = !state.manualLocked;
+      const btn = document.getElementById('manualLockToggle');
+      if (state.manualLocked) {
+        btn.textContent = "Locked";
+        btn.className = "px-3 py-1.5 text-xs font-semibold rounded-xl bg-rose-500/20 text-rose-300 border border-rose-500/30";
+      } else {
+        btn.textContent = "Unlocked";
+        btn.className = "px-3 py-1.5 text-xs font-semibold rounded-xl bg-slate-800 text-slate-300 border border-slate-700";
+      }
+      saveStateToStorage();
+      startTimer();
+    }
+
+    function clearAllOrders() {
+      if (confirm("Are you sure you want to delete all current lunch orders?")) {
+        state.orders = [];
+        state.checkedCallerItems = {};
+        saveStateToStorage();
+        renderAll();
+        showToast("All orders cleared!");
+        toggleAdminModal(false);
+      }
+    }
+
+    // --- Helper Utilities ---
+    function showToast(msg, type = "success") {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toastMessage');
+      const toastIcon = document.getElementById('toastIcon');
+
+      toastMsg.textContent = msg;
+      if (type === "error") {
+        toastIcon.setAttribute('data-lucide', 'alert-circle');
+        toastIcon.className = "w-5 h-5 text-rose-400";
+      } else {
+        toastIcon.setAttribute('data-lucide', 'check-circle');
+        toastIcon.className = "w-5 h-5 text-brand-500";
+      }
+      lucide.createIcons();
+
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 3000);
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/[&<>"']/g, function(m) {
+        return {
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#039;'
+        }[m];
+      });
+    }
+
+    function escapeJsString(str) {
+      return str.replace(/'/g, "\\'").replace(/"/g, '\\"');
+    }
+  </script>
+</body>
+</html>

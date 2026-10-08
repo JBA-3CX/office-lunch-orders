@@ -46,7 +46,7 @@ const DEFAULT_MENU = [
 let menu = DEFAULT_MENU;
 let ordersMap = {};
 let currentCart = [];
-let editingOrderKey = null; // Tracks order key when updating existing submission
+let editingOrderKey = null;
 let isLocked = false;
 let adminPIN = "1234";
 let panzoomInstance = null;
@@ -55,9 +55,12 @@ let cutoffDate = new Date();
 cutoffDate.setHours(11, 30, 0, 0);
 
 window.addEventListener('DOMContentLoaded', () => {
+  // Render INSTANTLY from local memory
   populateMenuSelect();
   handleItemSelectChange();
   startCountdownTimer();
+
+  // Sync with cloud in background
   initFirebaseListeners();
 });
 
@@ -68,7 +71,7 @@ function initFirebaseListeners() {
     renderOrders();
   });
 
-  // Sync menu from cloud ONLY if valid array exists
+  // Sync menu from cloud ONLY if valid non-empty array exists
   db.ref('menu').on('value', (snapshot) => {
     const data = snapshot.val();
     if (data && Array.isArray(Object.values(data)) && Object.values(data).length > 0) {
@@ -77,7 +80,7 @@ function initFirebaseListeners() {
       handleItemSelectChange();
       renderAdminMenuList();
     } else {
-      // If Firebase menu is empty, upload default menu to seed the database
+      // Seed Firebase with default menu if empty
       db.ref('menu').set(DEFAULT_MENU);
     }
   });
@@ -240,11 +243,9 @@ function editSubmittedOrder(key) {
   currentCart = order.items ? JSON.parse(JSON.stringify(order.items)) : [];
   renderCart();
 
-  // Scroll to form view smoothly
   document.getElementById('user-name').scrollIntoView({ behavior: 'smooth', block: 'center' });
   document.getElementById('user-name').focus();
 
-  // Update submit button style & text to indicate editing mode
   const submitBtn = document.querySelector("button[onclick='submitFinalOrder()']");
   if (submitBtn) {
     submitBtn.innerHTML = `<i class="fa-solid fa-pen-to-square"></i> Update Saved Order`;
@@ -278,11 +279,9 @@ function submitFinalOrder() {
   };
 
   if (editingOrderKey) {
-    // Overwrite existing order in Firebase
     db.ref(`orders/${editingOrderKey}`).set(updatedOrder);
     editingOrderKey = null;
   } else {
-    // New submission
     db.ref('orders').push(updatedOrder);
   }
 
@@ -668,3 +667,32 @@ function copyPhoneScript() {
     setTimeout(() => { copyBtn.innerHTML = origHTML; }, 2000);
   }
 }
+
+// BIND ALL FUNCTIONS TO GLOBAL WINDOW OBJECT
+window.handleItemSelectChange = handleItemSelectChange;
+window.updateItemPricePreview = updateItemPricePreview;
+window.adjustQty = adjustQty;
+window.addToCart = addToCart;
+window.removeFromCart = removeFromCart;
+window.editSubmittedOrder = editSubmittedOrder;
+window.submitFinalOrder = submitFinalOrder;
+window.deleteOrder = deleteOrder;
+window.switchTab = switchTab;
+window.openLightbox = openLightbox;
+window.closeLightbox = closeLightbox;
+window.zoomInLightbox = zoomInLightbox;
+window.zoomOutLightbox = zoomOutLightbox;
+window.resetZoomLightbox = resetZoomLightbox;
+window.openAdminModal = openAdminModal;
+window.closeAdminModal = closeAdminModal;
+window.verifyAdminPIN = verifyAdminPIN;
+window.saveAdminMenuItem = saveAdminMenuItem;
+window.editAdminMenuItem = editAdminMenuItem;
+window.deleteAdminMenuItem = deleteAdminMenuItem;
+window.resetAdminMenuForm = resetAdminMenuForm;
+window.resetMenuToDefault = resetMenuToDefault;
+window.updateCutoffTime = updateCutoffTime;
+window.addTimerMinutes = addTimerMinutes;
+window.toggleFormLock = toggleFormLock;
+window.clearAllOrders = clearAllOrders;
+window.copyPhoneScript = copyPhoneScript;

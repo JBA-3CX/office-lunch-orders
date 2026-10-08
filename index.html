@@ -7,6 +7,10 @@
 
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🥪</text></svg>">
 
+  <!-- Preconnect to speed up CDN downloads -->
+  <link rel="preconnect" href="https://cdn.tailwindcss.com">
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
@@ -44,7 +48,7 @@
       <div class="bg-amber-500/10 border border-amber-500/30 px-5 py-2 rounded-xl flex items-center gap-4 shadow-inner w-full md:w-auto justify-between md:justify-start">
         <div class="text-right">
           <div class="text-[10px] uppercase tracking-wider font-bold text-amber-400">Order Cutoff</div>
-          <div id="cutoff-time-display" class="font-bold text-sm text-slate-200">11:30 AM</div>
+          <div id="cutoff-time-display" class="font-bold text-sm text-slate-200">10:00 AM</div>
         </div>
         <div class="h-8 w-px bg-amber-500/30"></div>
         <div class="text-center">
@@ -174,7 +178,7 @@
           <span class="text-xs text-slate-400">Click image to enlarge</span>
         </div>
         <div class="relative group cursor-pointer overflow-hidden rounded-xl border border-slate-700/80" onclick="openLightbox()">
-          <img src="./menu.webp" alt="Aphrodite's Snacks Menu" class="w-full h-auto object-cover group-hover:scale-105 transition duration-300">
+          <img src="./menu.webp" fetchpriority="high" alt="Aphrodite's Snacks Menu" class="w-full h-auto object-cover group-hover:scale-105 transition duration-300">
           <div class="absolute inset-0 bg-slate-950/60 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-amber-400 font-medium text-sm gap-2">
             <i class="fa-solid fa-magnifying-glass-plus text-xl"></i> View Fullscreen Menu
           </div>
@@ -230,7 +234,7 @@
     </div>
   </main>
 
-<!-- LIGHTBOX MODAL WITH ZOOM -->
+  <!-- LIGHTBOX MODAL WITH ZOOM -->
   <div id="lightbox-modal" class="fixed inset-0 z-50 modal-backdrop hidden flex items-center justify-center p-4 overflow-hidden" onclick="closeLightbox()">
     <div class="absolute top-4 right-4 z-20 flex items-center gap-2" onclick="event.stopPropagation()">
       <button onclick="zoomInLightbox()" class="bg-slate-800/90 hover:bg-slate-700 text-white w-10 h-10 rounded-xl border border-slate-700 flex items-center justify-center font-bold text-lg shadow-lg"><i class="fa-solid fa-plus"></i></button>
@@ -243,9 +247,9 @@
       <i class="fa-solid fa-hand-pointer mr-1 text-amber-400"></i> Scroll or pinch to zoom • Drag to move
     </div>
     
-    <!-- Fixed Zoomable Container directly on the IMG -->
+    <!-- IMPORTANT: Added loading="lazy" here so it stops blocking the browser -->
     <div class="w-full h-full flex items-center justify-center pointer-events-none" onclick="event.stopPropagation()">
-      <img id="panzoom-element" src="./menu.jpg" alt="Aphrodite's Snacks Menu Full" class="pointer-events-auto cursor-grab active:cursor-grabbing max-w-full max-h-[85vh] w-auto h-auto object-contain rounded-xl shadow-2xl border border-slate-700">
+      <img id="panzoom-element" loading="lazy" src="./menu.jpg" alt="Aphrodite's Snacks Menu Full" class="pointer-events-auto cursor-grab active:cursor-grabbing max-w-full max-h-[85vh] w-auto h-auto object-contain rounded-xl shadow-2xl border border-slate-700">
     </div>
   </div>
 
@@ -265,16 +269,13 @@
 
       <div id="admin-panel-section" class="hidden space-y-5">
         <h3 class="font-bold text-lg text-slate-100 border-b border-slate-700 pb-2">Admin Dashboard</h3>
+        
+        <!-- Live Cutoff Sync -->
         <div>
-          <label class="block text-xs font-bold text-slate-300 mb-1">Set Cutoff Time Today</label>
+          <label class="block text-xs font-bold text-slate-300 mb-1">Set Cutoff Time Today (Syncs for everyone)</label>
           <div class="flex gap-2">
             <input type="time" id="cutoff-time-input" class="bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-1.5 text-sm flex-1 outline-none">
-            <button onclick="updateCutoffTime()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-bold px-3 py-1.5 rounded-lg">Save</button>
-          </div>
-          <div class="flex gap-1 mt-2">
-            <button onclick="addTimerMinutes(15)" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1 rounded border border-slate-700">+15m</button>
-            <button onclick="addTimerMinutes(30)" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1 rounded border border-slate-700">+30m</button>
-            <button onclick="addTimerMinutes(60)" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1 rounded border border-slate-700">+1hr</button>
+            <button onclick="updateCutoffTime()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-bold px-3 py-1.5 rounded-lg">Save Time</button>
           </div>
         </div>
 
@@ -319,6 +320,15 @@
           <div id="admin-menu-list" class="space-y-1.5 max-h-48 overflow-y-auto pr-1"></div>
         </div>
 
+        <div class="pt-3 border-t border-slate-700">
+          <div class="flex justify-between items-center mb-2">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-amber-400">Archived Order History</h4>
+          </div>
+          <div id="admin-history-list" class="space-y-1.5 max-h-32 overflow-y-auto pr-1 text-xs text-slate-300">
+            <!-- Dynamic History Injected Here -->
+          </div>
+        </div>
+
         <div class="flex gap-2 pt-3 border-t border-slate-700">
           <button onclick="toggleFormLock()" id="toggle-lock-btn" class="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white text-xs font-bold py-2 rounded-lg">Lock Orders Now</button>
           <button onclick="clearAllOrders()" class="bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-bold px-3 py-2 rounded-lg border border-red-500/30">Clear All Orders</button>
@@ -330,7 +340,7 @@
   <!-- 1. MAIN APP SCRIPT FIRST (Renders UI instantly) -->
   <script src="./app.js"></script>
 
-  <!-- 2. FIREBASE SDKs DEFERRED (Loads in background without blocking the UI) -->
+  <!-- 2. FIREBASE SDKs DEFERRED (Loads in background) -->
   <script defer src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 

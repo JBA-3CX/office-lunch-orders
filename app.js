@@ -10,8 +10,14 @@ const firebaseConfig = {
   measurementId: "G-VGZV5SSE6Z"
 };
 
-// Initialize Firebase Immediately
-firebase.initializeApp(firebaseConfig);
+// Initialize Firebase
+try {
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+} catch (e) {
+  console.error("Firebase initialization error:", e);
+}
 const db = firebase.database();
 
 const DEFAULT_MENU = [
@@ -43,7 +49,7 @@ const DEFAULT_MENU = [
   { id: 26, category: "Salads", name: "#25 Tuna Salad", basePrice: 4.50, hasDouble: false }
 ];
 
-let menu = DEFAULT_MENU;
+let menu = [...DEFAULT_MENU];
 let ordersMap = {};
 let currentCart = [];
 let editingOrderKey = null;
@@ -51,38 +57,50 @@ let isLocked = false;
 let adminPIN = "1234";
 let panzoomInstance = null;
 
+// Initialize cutoff time relative to today
 let cutoffDate = new Date();
-cutoffDate.setHours(11, 30, 0, 0);
+if (new Date().getHours() >= 11 && new Date().getMinutes() > 30) {
+  cutoffDate.setTime(Date.now() + 2 * 60 * 60 * 1000); // Set +2 hours if past 11:30 AM
+} else {
+  cutoffDate.setHours(11, 30, 0, 0);
+}
 
-window.addEventListener('DOMContentLoaded', () => {
-  // Render INSTANTLY from local memory
+function initApp() {
   populateMenuSelect();
   handleItemSelectChange();
   startCountdownTimer();
-
-  // Sync with cloud in background
   initFirebaseListeners();
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}
 
 function initFirebaseListeners() {
-  // Sync orders from cloud
   db.ref('orders').on('value', (snapshot) => {
     ordersMap = snapshot.val() || {};
     renderOrders();
   });
 
-  // Sync menu from cloud ONLY if valid non-empty array exists
   db.ref('menu').on('value', (snapshot) => {
     const data = snapshot.val();
-    if (data && Array.isArray(Object.values(data)) && Object.values(data).length > 0) {
-      menu = Object.values(data);
-      populateMenuSelect();
-      handleItemSelectChange();
-      renderAdminMenuList();
-    } else {
-      // Seed Firebase with default menu if empty
-      db.ref('menu').set(DEFAULT_MENU);
+    if (data) {
+      const parsedMenu = Array.isArray(data) ? data : Object.values(data);
+      if (parsedMenu && parsedMenu.length > 0) {
+        menu = parsedMenu;
+        populateMenuSelect();
+        handleItemSelectChange();
+        renderAdminMenuList();
+        return;
+      }
     }
+    // Fallback if cloud menu is empty
+    menu = [...DEFAULT_MENU];
+    populateMenuSelect();
+    handleItemSelectChange();
+    renderAdminMenuList();
   });
 }
 
@@ -93,6 +111,7 @@ function populateMenuSelect() {
   
   let currentCat = '';
   menu.forEach(item => {
+    if (!item) return;
     if (item.category !== currentCat) {
       currentCat = item.category;
       const optgroup = document.createElement('optgroup');
@@ -111,7 +130,7 @@ function handleItemSelectChange() {
   if (!select || !select.value) return;
 
   const itemId = parseInt(select.value);
-  const item = menu.find(m => m.id === itemId);
+  const item = menu.find(m => m && m.id === itemId);
   if (!item) return;
 
   const sizeContainer = document.getElementById('size-container');
@@ -150,9 +169,11 @@ function adjustQty(delta) {
 
 function updateItemPricePreview() {
   const sizeSelect = document.getElementById('size-select');
+  if (!sizeSelect || sizeSelect.selectedIndex < 0) return;
+  
   const selectedOption = sizeSelect.options[sizeSelect.selectedIndex];
   const basePrice = parseFloat(selectedOption ? selectedOption.getAttribute('data-price') : 0);
-  const qty = parseInt(document.getElementById('item-qty').value);
+  const qty = parseInt(document.getElementById('item-qty').value) || 1;
 
   const extras = document.querySelectorAll('input[name="extra"]:checked');
   const extrasCost = extras.length * 0.50;
@@ -162,8 +183,11 @@ function updateItemPricePreview() {
 }
 
 function addToCart() {
-  const itemId = parseInt(document.getElementById('item-select').value);
-  const item = menu.find(m => m.id === itemId);
+  const select = document.getElementById('item-select');
+  if (!select || !select.value) return;
+
+  const itemId = parseInt(select.value);
+  const item = menu.find(m => m && m.id === itemId);
   if (!item) return;
 
   const sizeSelect = document.getElementById('size-select');
@@ -534,13 +558,14 @@ function renderAdminMenuList() {
   container.innerHTML = '';
   
   menu.forEach(item => {
+    if (!item) return;
     const div = document.createElement('div');
     div.className = "flex items-center justify-between bg-slate-800 p-2 rounded text-xs border border-slate-700";
     div.innerHTML = `
       <div class="truncate pr-2">
         <span class="font-bold text-amber-400">[${item.category}]</span> 
         <span class="text-slate-200">${item.name}</span>
-        <span class="text-slate-400 block text-[10px]">€${item.basePrice.toFixed(2)}</span>
+        <span class="text-slate-400 block text-[10px]">€${item.basePrice ? item.basePrice.toFixed(2) : '0.00'}</span>
       </div>
       <div class="flex items-center gap-1.5 shrink-0">
         <button onclick="editAdminMenuItem(${item.id})" class="text-slate-400 hover:text-amber-400 p-1"><i class="fa-solid fa-pen"></i></button>
@@ -552,7 +577,7 @@ function renderAdminMenuList() {
 }
 
 function editAdminMenuItem(id) {
-  const item = menu.find(m => m.id === id);
+  const item = menu.find(m => m && m.id === id);
   if (!item) return;
   document.getElementById('edit-item-id').value = item.id;
   document.getElementById('admin-item-cat').value = item.category;
@@ -573,7 +598,7 @@ function saveAdminMenuItem() {
   if (!name || isNaN(basePrice)) return;
 
   if (editId) {
-    const item = menu.find(m => m.id === parseInt(editId));
+    const item = menu.find(m => m && m.id === parseInt(editId));
     if (item) {
       item.category = category; item.name = name; item.basePrice = basePrice;
       item.hasDouble = hasDouble; item.isFries = isFries;
@@ -592,7 +617,7 @@ function saveAdminMenuItem() {
 
 function deleteAdminMenuItem(id) {
   if (confirm("Delete this menu item?")) {
-    menu = menu.filter(m => m.id !== id);
+    menu = menu.filter(m => m && m.id !== id);
     db.ref('menu').set(menu);
 
     populateMenuSelect();

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Office Lunch Order Manager</title>
+  <title>Aphrodite's Snacks - Office Lunch Order Manager</title>
   
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -17,11 +17,12 @@
         extend: {
           colors: {
             brand: {
-              50: '#f0fdf4',
-              100: '#dcfce7',
-              500: '#22c55e',
-              600: '#16a34a',
-              700: '#15803d',
+              50: '#fffbe1',
+              100: '#fff3b8',
+              400: '#facc15',
+              500: '#eab308',
+              600: '#ca8a04',
+              700: '#a16207',
             }
           }
         }
@@ -30,58 +31,51 @@
   </script>
   <style>
     .glass-card {
-      background: rgba(30, 41, 59, 0.7);
+      background: rgba(30, 41, 59, 0.75);
       backdrop-filter: blur(12px);
       border: 1px solid rgba(255, 255, 255, 0.08);
     }
     .timer-glow {
-      box-shadow: 0 0 25px rgba(22, 163, 74, 0.25);
+      box-shadow: 0 0 25px rgba(234, 179, 8, 0.2);
     }
     .timer-glow-expired {
       box-shadow: 0 0 25px rgba(225, 29, 72, 0.25);
     }
-    /* Custom Scrollbar */
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-    ::-webkit-scrollbar-track {
-      background: rgba(15, 23, 42, 0.6);
-    }
-    ::-webkit-scrollbar-thumb {
-      background: rgba(51, 65, 85, 0.8);
-      border-radius: 4px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: rgba(71, 85, 105, 1);
-    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.6); }
+    ::-webkit-scrollbar-thumb { background: rgba(51, 65, 85, 0.8); border-radius: 4px; }
   </style>
 </head>
-<body class="h-full flex flex-col font-sans antialiased text-slate-200 selection:bg-brand-500 selection:text-white">
+<body class="h-full flex flex-col font-sans antialiased text-slate-200 selection:bg-brand-500 selection:text-slate-950">
 
-  <header class="sticky top-0 z-40 border-b border-slate-800 bg-slate-900/90 backdrop-blur-md">
+  <header class="sticky top-0 z-40 border-b border-slate-800 bg-slate-900/95 backdrop-blur-md">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
       <div class="flex items-center space-x-3">
-        <div class="p-2 bg-gradient-to-tr from-brand-600 to-emerald-400 rounded-xl shadow-lg">
-          <i data-lucide="utensils" class="w-6 h-6 text-slate-950 stroke-[2.5]"></i>
+        <div class="p-2 bg-gradient-to-tr from-brand-600 to-amber-400 rounded-xl shadow-lg">
+          <i data-lucide="sandwich" class="w-6 h-6 text-slate-950 stroke-[2.5]"></i>
         </div>
         <div>
           <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-            Lunch Call Hub
-            <span class="text-xs font-normal px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">GitHub Pages Ready</span>
+            Aphrodite's Snacks
+            <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-800 text-brand-400 border border-slate-700">Call-In Hub</span>
           </h1>
-          <p class="text-xs text-slate-400">Streamlined office food orders & caller dashboard</p>
+          <p class="text-xs text-slate-400 flex items-center gap-2">
+            <span>☎️ 22.776480 / 22.774132</span>
+            <span>•</span>
+            <span>Metochiou 34D, Lefkosia</span>
+          </p>
         </div>
       </div>
 
-      <!-- Action Utilities Header -->
+      <!-- Header Buttons -->
       <div class="flex items-center space-x-2">
-        <button id="copyScriptBtn" onclick="copyCallScript()" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition flex items-center gap-1.5 shadow-sm">
-          <i data-lucide="copy" class="w-3.5 h-3.5 text-brand-500"></i>
+        <button id="copyScriptBtn" onclick="copyCallScript()" class="px-3 py-2 text-xs font-semibold rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition flex items-center gap-1.5 shadow-sm">
+          <i data-lucide="phone-outgoing" class="w-3.5 h-3.5 text-brand-400"></i>
           <span class="hidden sm:inline">Copy Phone Script</span>
         </button>
-        <button onclick="toggleAdminModal(true)" class="p-2 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition" title="Settings & Admin Controls">
-          <i data-lucide="settings" class="w-4 h-4"></i>
+        <button onclick="openAdminModal()" class="px-3 py-2 text-xs font-semibold rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 transition flex items-center gap-1.5 shadow-sm" title="Admin Settings">
+          <i data-lucide="shield-check" class="w-4 h-4 text-brand-400"></i>
+          <span class="hidden sm:inline">⚙️ Admin Panel</span>
         </button>
       </div>
     </div>
@@ -89,26 +83,25 @@
 
   <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
-    <!-- Big Countdown Banner -->
     <div id="timerBanner" class="relative overflow-hidden rounded-2xl glass-card p-6 sm:p-8 border border-slate-800 transition-all duration-300 timer-glow">
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
         
         <div class="space-y-1">
           <div class="flex items-center gap-2">
-            <span id="statusBadge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-brand-500/10 text-brand-400 border border-brand-500/20">
+            <span id="statusBadge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-brand-500/10 text-brand-400 border border-brand-500/30">
               <span class="w-2 h-2 rounded-full bg-brand-500 animate-pulse"></span>
               Accepting Orders
             </span>
-            <span id="cutoffTimeDisplay" class="text-xs text-slate-400">Cutoff: Today at 11:30 AM</span>
+            <span id="cutoffTimeDisplay" class="text-xs text-slate-400 font-medium">Cutoff: Today at 11:30 AM</span>
           </div>
-          <h2 class="text-xl sm:text-2xl font-bold text-white tracking-tight">Time Remaining to Order</h2>
-          <p class="text-xs text-slate-400">Please make sure your order and custom notes are submitted before the timer hits zero!</p>
+          <h2 class="text-xl sm:text-2xl font-extrabold text-white tracking-tight">Time Left to Place Order</h2>
+          <p class="text-xs text-slate-400">Ensure your meal and modifications are submitted before the cutoff timer reaches zero!</p>
         </div>
 
         <!-- Timer Digital Display -->
-        <div class="flex items-center justify-center gap-3 bg-slate-950/60 p-4 rounded-xl border border-slate-800/80">
+        <div class="flex items-center justify-center gap-3 bg-slate-950/70 p-4 rounded-xl border border-slate-800">
           <div class="text-center">
-            <span id="timerHours" class="block font-mono text-3xl sm:text-4xl font-extrabold text-white">00</span>
+            <span id="timerHours" class="block font-mono text-3xl sm:text-4xl font-black text-white">00</span>
             <span class="text-[10px] uppercase tracking-wider text-slate-500 font-semibold">Hours</span>
           </div>
           <span class="font-mono text-2xl font-bold text-slate-600 mb-4">:</span>
@@ -131,11 +124,11 @@
       <!-- LEFT COLUMN: Order Submission Form -->
       <section class="lg:col-span-5 glass-card rounded-2xl p-6 border border-slate-800">
         <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-semibold text-white flex items-center gap-2">
-            <i data-lucide="plus-circle" class="w-5 h-5 text-brand-500"></i>
+          <h3 class="text-lg font-bold text-white flex items-center gap-2">
+            <i data-lucide="plus-circle" class="w-5 h-5 text-brand-400"></i>
             Place Your Order
           </h3>
-          <span class="text-xs text-slate-400">* Required fields</span>
+          <span class="text-xs text-slate-400">* Required</span>
         </div>
 
         <form id="orderForm" onsubmit="handleOrderSubmit(event)" class="space-y-4">
@@ -151,39 +144,102 @@
                 type="text" 
                 id="userName" 
                 required 
-                placeholder="e.g. Sarah Jenkins" 
+                placeholder="e.g. Alex Kass" 
                 class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition"
               >
               <i data-lucide="user" class="w-4 h-4 text-slate-500 absolute right-3 top-3"></i>
             </div>
           </div>
 
-          <!-- Item Selection & Custom Entry -->
+          <!-- Category Filter & Item Selection -->
           <div>
-            <label for="itemSelect" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-              Select Item *
-            </label>
+            <div class="flex items-center justify-between mb-1.5">
+              <label for="itemSelect" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                Select Item *
+              </label>
+              <select id="categoryFilter" onchange="filterMenuItemsByCategory()" class="bg-slate-950 border border-slate-800 text-[11px] text-brand-400 rounded-lg px-2 py-0.5 focus:outline-none">
+                <option value="ALL">All Categories</option>
+                <option value="SANDWICHES">Sandwiches (#1-#17)</option>
+                <option value="BURGERS">Burgers (#18-#21)</option>
+                <option value="HOT DOGS">Hot Dogs (#22-#23)</option>
+                <option value="FRIES">Fries</option>
+                <option value="SALADS">Salads (#24-#25)</option>
+              </select>
+            </div>
+
             <select 
               id="itemSelect" 
               onchange="handleItemSelectChange()" 
+              required
               class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition mb-2"
             >
               <!-- Populated dynamically -->
             </select>
+          </div>
 
-            <!-- Custom Item Input (Shown when "Custom Item..." is selected) -->
-            <div id="customItemContainer" class="hidden">
-              <input 
-                type="text" 
-                id="customItemName" 
-                placeholder="Type item name (e.g. Falafel Wrap)" 
-                class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition"
-              >
+          <!-- Dynamic Portion / Size Selector -->
+          <div id="sizeContainer" class="hidden">
+            <label id="sizeLabel" for="itemSize" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+              Bread Size / Portion
+            </label>
+            <select 
+              id="itemSize" 
+              onchange="calculateEstimatedPrice()"
+              class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition"
+            >
+              <!-- Populated dynamically based on item -->
+            </select>
+          </div>
+
+          <!-- Bread Type Option (For Sandwiches/Burgers) -->
+          <div id="breadTypeContainer" class="hidden">
+            <label for="breadType" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+              Bread Choice
+            </label>
+            <select 
+              id="breadType" 
+              class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition"
+            >
+              <option value="White Bread">White Bread Roll</option>
+              <option value="Whole Wheat">Whole Wheat Bread (Mavro)</option>
+            </select>
+          </div>
+
+          <!-- Extras Checkboxes (€0.50 each) -->
+          <div id="extrasContainer" class="hidden space-y-1.5 pt-1">
+            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
+              Add Extras (+€0.50 each)
+            </label>
+            <div class="grid grid-cols-2 gap-2 text-xs bg-slate-950/60 p-3 rounded-xl border border-slate-800">
+              <label class="flex items-center gap-2 cursor-pointer hover:text-white">
+                <input type="checkbox" value="Cheese (€0.50)" onchange="calculateEstimatedPrice()" class="extra-check rounded border-slate-700 text-brand-500 focus:ring-brand-500 bg-slate-900">
+                <span>Cheese (Τυρί)</span>
+              </label>
+              <label class="flex items-center gap-2 cursor-pointer hover:text-white">
+                <input type="checkbox" value="Bacon (€0.50)" onchange="calculateEstimatedPrice()" class="extra-check rounded border-slate-700 text-brand-500 focus:ring-brand-500 bg-slate-900">
+                <span>Bacon (Μπέικον)</span>
+              </label>
+              <label class="flex items-center gap-2 cursor-pointer hover:text-white">
+                <input type="checkbox" value="Egg (€0.50)" onchange="calculateEstimatedPrice()" class="extra-check rounded border-slate-700 text-brand-500 focus:ring-brand-500 bg-slate-900">
+                <span>Egg (Αυγό)</span>
+              </label>
+              <label class="flex items-center gap-2 cursor-pointer hover:text-white">
+                <input type="checkbox" value="Mushrooms (€0.50)" onchange="calculateEstimatedPrice()" class="extra-check rounded border-slate-700 text-brand-500 focus:ring-brand-500 bg-slate-900">
+                <span>Mushrooms (Μανιτάρια)</span>
+              </label>
+              <label class="flex items-center gap-2 cursor-pointer hover:text-white">
+                <input type="checkbox" value="Haloumi (€0.50)" onchange="calculateEstimatedPrice()" class="extra-check rounded border-slate-700 text-brand-500 focus:ring-brand-500 bg-slate-900">
+                <span>Haloumi (Χαλούμι)</span>
+              </label>
+              <label class="flex items-center gap-2 cursor-pointer hover:text-white">
+                <input type="checkbox" value="Sautéed Onions (Free)" onchange="calculateEstimatedPrice()" class="extra-check rounded border-slate-700 text-brand-500 focus:ring-brand-500 bg-slate-900">
+                <span>Onions (Τσιγαριστό)</span>
+              </label>
             </div>
           </div>
 
-          <!-- Quantity & Details -->
-          <div class="grid grid-cols-3 gap-3">
+          <!-- Quantity & Live Estimated Price -->
+          <div class="grid grid-cols-3 gap-3 items-center">
             <div class="col-span-1">
               <label for="itemQty" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
                 Qty *
@@ -195,45 +251,36 @@
                 max="20" 
                 value="1" 
                 required 
-                class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition font-semibold text-center"
+                onchange="calculateEstimatedPrice()"
+                class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition font-semibold text-center"
               >
             </div>
 
-            <div class="col-span-2">
-              <label for="itemCategory" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-                Category
-              </label>
-              <select 
-                id="itemCategory" 
-                class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition"
-              >
-                <option value="Mains">Mains</option>
-                <option value="Sides">Sides</option>
-                <option value="Drinks">Drinks</option>
-                <option value="Dessert">Dessert</option>
-              </select>
+            <div class="col-span-2 text-right bg-slate-950/80 p-2.5 rounded-xl border border-slate-800">
+              <span class="block text-[10px] text-slate-400 font-semibold uppercase">Estimated Total</span>
+              <span id="livePriceDisplay" class="font-mono text-lg font-bold text-brand-400">€0.00</span>
             </div>
           </div>
 
-          <!-- Special Comments / Modifications -->
+          <!-- Special Instructions / Comments -->
           <div>
             <label for="itemComments" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-              Special Instructions / Comments
+              Comments / Modifications
             </label>
             <textarea 
               id="itemComments" 
               rows="2" 
-              placeholder="e.g. No tomato, dressing on the side, extra spicy..." 
+              placeholder="e.g. No tomato, dressing on side, cut in half..." 
               class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition resize-none"
             ></textarea>
           </div>
 
-          <!-- Form Buttons -->
+          <!-- Form Action Buttons -->
           <div class="pt-2 flex items-center gap-2">
             <button 
               type="submit" 
               id="submitOrderBtn" 
-              class="flex-1 bg-brand-600 hover:bg-brand-500 text-white font-semibold py-3 px-4 rounded-xl shadow-lg transition duration-200 flex items-center justify-center gap-2 text-sm"
+              class="flex-1 bg-brand-500 hover:bg-brand-400 text-slate-950 font-bold py-3 px-4 rounded-xl shadow-lg transition duration-200 flex items-center justify-center gap-2 text-sm"
             >
               <i data-lucide="send" class="w-4 h-4"></i>
               <span id="submitBtnText">Submit Order</span>
@@ -242,45 +289,44 @@
               type="button" 
               id="cancelEditBtn" 
               onclick="cancelEdit()" 
-              class="hidden px-4 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-medium rounded-xl border border-slate-700 transition"
+              class="hidden px-4 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-semibold rounded-xl border border-slate-700 transition"
             >
               Cancel
             </button>
           </div>
           
           <p id="formClosedNotice" class="hidden text-xs text-rose-400 font-medium text-center pt-2">
-            ⚠️ Ordering is currently locked because the cutoff time has passed.
+            ⚠️ Form locked. The cutoff time has passed or was manually locked by admin.
           </p>
         </form>
       </section>
 
-      <!-- RIGHT COLUMN: Dashboard & Live Summary Views -->
-      <section class="lg:col-span-7 glass-card rounded-2xl p-6 border border-slate-800 flex flex-col min-h-[500px]">
+      <section class="lg:col-span-7 glass-card rounded-2xl p-6 border border-slate-800 flex flex-col min-h-[520px]">
         
         <!-- Header & View Toggles -->
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
           <div>
-            <h3 class="text-lg font-semibold text-white flex items-center gap-2">
-              <i data-lucide="clipboard-list" class="w-5 h-5 text-brand-500"></i>
-              Office Lunch Summary
+            <h3 class="text-lg font-bold text-white flex items-center gap-2">
+              <i data-lucide="clipboard-check" class="w-5 h-5 text-brand-400"></i>
+              Order Consolidated View
             </h3>
-            <p class="text-xs text-slate-400">Total Items: <span id="totalItemsCount" class="font-bold text-white">0</span> | Total People: <span id="totalPeopleCount" class="font-bold text-white">0</span></p>
+            <p class="text-xs text-slate-400">Total Items: <span id="totalItemsCount" class="font-bold text-white">0</span> | Est. Total: <span id="grandTotalDisplay" class="font-bold text-brand-400">€0.00</span></p>
           </div>
 
           <!-- View Tabs -->
-          <div class="flex p-1 bg-slate-950 rounded-xl border border-slate-800/80">
+          <div class="flex p-1 bg-slate-950 rounded-xl border border-slate-800">
             <button 
               id="tabCaller" 
               onclick="switchTab('caller')" 
-              class="px-3 py-1.5 text-xs font-semibold rounded-lg transition flex items-center gap-1.5 bg-brand-600 text-white shadow"
+              class="px-3 py-1.5 text-xs font-bold rounded-lg transition flex items-center gap-1.5 bg-brand-500 text-slate-950 shadow"
             >
               <i data-lucide="phone-call" class="w-3.5 h-3.5"></i>
-              Phone Order Summary
+              Phone Order Mode
             </button>
             <button 
               id="tabIndividual" 
               onclick="switchTab('individual')" 
-              class="px-3 py-1.5 text-xs font-semibold rounded-lg transition flex items-center gap-1.5 text-slate-400 hover:text-white"
+              class="px-3 py-1.5 text-xs font-bold rounded-lg transition flex items-center gap-1.5 text-slate-400 hover:text-white"
             >
               <i data-lucide="users" class="w-3.5 h-3.5"></i>
               Individual Orders
@@ -290,16 +336,16 @@
 
         <!-- TAB 1: PHONE ORDER AGGREGATED VIEW -->
         <div id="viewCaller" class="space-y-4 pt-4 flex-1">
-          <div class="flex items-center justify-between bg-slate-950/50 p-2.5 rounded-xl border border-slate-800 text-xs text-slate-400">
+          <div class="flex items-center justify-between bg-slate-950/60 p-2.5 rounded-xl border border-slate-800 text-xs text-slate-400">
             <span class="flex items-center gap-1.5">
-              <i data-lucide="check-square" class="w-4 h-4 text-brand-500"></i>
-              Check off items as you order them on the phone
+              <i data-lucide="check-square" class="w-4 h-4 text-brand-400"></i>
+              Check items off as you read them over the phone
             </span>
             <button onclick="resetCallerCheckboxes()" class="hover:text-white underline text-[11px]">Clear Checkmarks</button>
           </div>
 
           <div id="callerSummaryList" class="space-y-3">
-            <!-- Dynamic Content -->
+            <!-- Dynamic Aggregated Content -->
           </div>
         </div>
 
@@ -310,14 +356,14 @@
               type="text" 
               id="searchOrdersInput" 
               oninput="renderIndividualOrders()" 
-              placeholder="Filter by person or item..." 
+              placeholder="Search person or item..." 
               class="w-full sm:w-64 bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
             >
-            <span class="text-xs text-slate-500 hidden sm:inline">Click edit on your row to modify</span>
+            <span class="text-xs text-slate-500 hidden sm:inline">Alphabetical list</span>
           </div>
 
           <div id="individualOrdersList" class="space-y-3">
-            <!-- Dynamic Content -->
+            <!-- Dynamic Individual Content -->
           </div>
         </div>
 
@@ -326,109 +372,219 @@
     </div>
   </main>
 
-  <!-- Admin & Settings Modal -->
-  <div id="adminModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4">
-    <div class="glass-card max-w-md w-full rounded-2xl p-6 border border-slate-800 space-y-5">
+  <!-- ADMIN AUTH & SETTINGS MODAL -->
+  <div id="adminModal" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="glass-card max-w-2xl w-full rounded-2xl p-6 border border-slate-800 space-y-6 max-h-[90vh] flex flex-col">
+      
+      <!-- Admin Header -->
       <div class="flex items-center justify-between border-b border-slate-800 pb-3">
         <h3 class="text-lg font-bold text-white flex items-center gap-2">
-          <i data-lucide="sliders" class="w-5 h-5 text-brand-500"></i>
-          Admin & Setup Controls
+          <i data-lucide="shield" class="w-5 h-5 text-brand-400"></i>
+          Administrator Control Panel
         </h3>
-        <button onclick="toggleAdminModal(false)" class="text-slate-400 hover:text-white">
+        <button onclick="closeAdminModal()" class="text-slate-400 hover:text-white">
           <i data-lucide="x" class="w-5 h-5"></i>
         </button>
       </div>
 
-      <!-- Cutoff Time Configuration -->
-      <div class="space-y-2">
-        <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider">Set Today's Cutoff Time</label>
-        <div class="flex items-center gap-2">
+      <!-- PIN AUTHENTICATION VIEW -->
+      <div id="adminPinAuthView" class="space-y-4 py-8 text-center max-w-xs mx-auto w-full">
+        <div class="p-3 bg-brand-500/10 rounded-full w-12 h-12 mx-auto flex items-center justify-center text-brand-400 border border-brand-500/20">
+          <i data-lucide="lock" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <h4 class="text-base font-bold text-white">Enter Admin Security PIN</h4>
+          <p class="text-xs text-slate-400 mt-1">Default PIN is <code class="text-brand-400 bg-slate-900 px-1.5 py-0.5 rounded">1234</code></p>
+        </div>
+        <form onsubmit="authenticateAdminPin(event)" class="space-y-3">
           <input 
-            type="time" 
-            id="adminCutoffInput" 
-            class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-brand-500 flex-1"
+            type="password" 
+            id="adminPinInput" 
+            maxlength="8" 
+            required 
+            placeholder="Enter PIN" 
+            class="w-full text-center bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-lg font-mono text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
           >
-          <button onclick="updateCutoffTime()" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold rounded-xl transition">
-            Set Time
+          <button type="submit" class="w-full py-2.5 bg-brand-500 hover:bg-brand-400 text-slate-950 font-bold rounded-xl text-xs transition">
+            Unlock Admin Panel
           </button>
+        </form>
+      </div>
+
+      <!-- AUTHENTICATED ADMIN DASHBOARD -->
+      <div id="adminDashboardView" class="hidden space-y-6 flex-1 overflow-y-auto pr-1">
+        
+        <!-- Admin Section 1: Cutoff Timer Controls -->
+        <div class="p-4 bg-slate-950/60 rounded-xl border border-slate-800 space-y-3">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-brand-400 flex items-center gap-1.5">
+            <i data-lucide="clock" class="w-4 h-4"></i>
+            Cutoff Countdown Settings
+          </h4>
+          
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-end">
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">Specific Today Cutoff Time</label>
+              <input type="time" id="adminCutoffInput" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:ring-1 focus:ring-brand-500">
+            </div>
+            <button onclick="updateCutoffTimeFromInput()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 transition">
+              Set Exact Time
+            </button>
+          </div>
+
+          <div class="pt-2 border-t border-slate-800/60">
+            <span class="block text-[11px] text-slate-400 mb-1.5">Quick Timer Extension</span>
+            <div class="grid grid-cols-4 gap-2">
+              <button onclick="extendTimerMinutes(15)" class="py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-200 text-xs font-semibold rounded-lg border border-slate-800">+15 mins</button>
+              <button onclick="extendTimerMinutes(30)" class="py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-200 text-xs font-semibold rounded-lg border border-slate-800">+30 mins</button>
+              <button onclick="extendTimerMinutes(45)" class="py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-200 text-xs font-semibold rounded-lg border border-slate-800">+45 mins</button>
+              <button onclick="extendTimerMinutes(60)" class="py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-200 text-xs font-semibold rounded-lg border border-slate-800">+60 mins</button>
+            </div>
+          </div>
         </div>
-      </div>
 
-      <!-- Preset Items Customization -->
-      <div class="space-y-2">
-        <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider">Preset Menu Items (Comma Separated)</label>
-        <textarea 
-          id="adminMenuItemsInput" 
-          rows="3" 
-          class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-brand-500 resize-none"
-        ></textarea>
-        <button onclick="saveMenuItems()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium rounded-lg border border-slate-700 transition">
-          Update Menu Items
-        </button>
-      </div>
+        <!-- Admin Section 2: Menu Item Management -->
+        <div class="p-4 bg-slate-950/60 rounded-xl border border-slate-800 space-y-4">
+          <div class="flex items-center justify-between">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-brand-400 flex items-center gap-1.5">
+              <i data-lucide="utensils" class="w-4 h-4"></i>
+              Manage Aphrodite's Menu Items
+            </h4>
+            <button onclick="openMenuEditForm()" class="px-2.5 py-1 bg-brand-500/10 text-brand-400 hover:bg-brand-500/20 text-xs font-semibold rounded-lg border border-brand-500/30">
+              + Add New Item
+            </button>
+          </div>
 
-      <!-- Emergency Lock Toggle -->
-      <div class="pt-2 border-t border-slate-800 flex items-center justify-between">
-        <div>
-          <span class="block text-sm font-semibold text-white">Manual Form Lock</span>
-          <span class="text-xs text-slate-400">Lock orders regardless of timer</span>
+          <!-- Dynamic Menu Editor Sub-Form -->
+          <div id="adminMenuEditCard" class="hidden p-3 bg-slate-900 rounded-xl border border-slate-800 space-y-3">
+            <input type="hidden" id="editMenuId" value="">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <input type="text" id="menuNumberInput" placeholder="# Num (e.g. 26)" class="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white">
+              <input type="text" id="menuNameInput" placeholder="Item Name" class="col-span-2 bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white">
+              <select id="menuCategoryInput" class="bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 text-xs text-white">
+                <option value="SANDWICHES">SANDWICHES</option>
+                <option value="BURGERS">BURGERS</option>
+                <option value="HOT DOGS">HOT DOGS</option>
+                <option value="FRIES">FRIES</option>
+                <option value="SALADS">SALADS</option>
+              </select>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              <input type="number" step="0.10" id="menuSinglePrice" placeholder="Single Price (€)" class="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white">
+              <input type="number" step="0.10" id="menuDoublePrice" placeholder="Double Price (€ optional)" class="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white">
+              <div class="flex gap-2 col-span-2 sm:col-span-1">
+                <button onclick="saveMenuItemAdmin()" class="flex-1 bg-brand-500 text-slate-950 font-bold text-xs py-1.5 rounded-lg">Save</button>
+                <button onclick="closeMenuEditForm()" class="px-3 bg-slate-800 text-slate-300 text-xs py-1.5 rounded-lg">Cancel</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- List of Menu Items -->
+          <div id="adminMenuListContainer" class="max-h-56 overflow-y-auto space-y-1.5 pr-1">
+            <!-- Dynamic Menu Items List -->
+          </div>
         </div>
-        <button id="manualLockToggle" onclick="toggleManualLock()" class="px-3 py-1.5 text-xs font-semibold rounded-xl bg-slate-800 text-slate-300 border border-slate-700">
-          Unlocked
-        </button>
-      </div>
 
-      <!-- Clear Data -->
-      <div class="pt-2 border-t border-slate-800 flex items-center justify-between">
-        <div>
-          <span class="block text-sm font-semibold text-rose-400">Reset Session</span>
-          <span class="text-xs text-slate-500">Deletes all current orders for today</span>
+        <!-- Admin Section 3: Lock & Session Reset -->
+        <div class="p-4 bg-slate-950/60 rounded-xl border border-slate-800 space-y-3">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-rose-400 flex items-center gap-1.5">
+            <i data-lucide="power" class="w-4 h-4"></i>
+            Form Controls & Reset
+          </h4>
+
+          <div class="flex items-center justify-between py-1 border-b border-slate-800">
+            <div>
+              <span class="block text-xs font-semibold text-white">Manual Override Form Lock</span>
+              <span class="text-[11px] text-slate-400">Force lock/unlock ordering regardless of countdown timer</span>
+            </div>
+            <button id="manualLockBtn" onclick="toggleManualLock()" class="px-3 py-1.5 text-xs font-bold rounded-xl bg-slate-800 text-slate-300 border border-slate-700">
+              Unlocked
+            </button>
+          </div>
+
+          <div class="flex items-center justify-between py-1">
+            <div>
+              <span class="block text-xs font-semibold text-rose-400">Reset Current Orders</span>
+              <span class="text-[11px] text-slate-500">Deletes all submitted orders for the active session</span>
+            </div>
+            <button onclick="clearAllOrders()" class="px-3 py-1.5 text-xs font-bold rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 transition">
+              Clear All Orders
+            </button>
+          </div>
         </div>
-        <button onclick="clearAllOrders()" class="px-3 py-1.5 text-xs font-semibold rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 transition">
-          Clear All Orders
-        </button>
-      </div>
 
-      <div class="pt-2">
-        <button onclick="toggleAdminModal(false)" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl border border-slate-700 transition">
-          Close Settings
-        </button>
+        <!-- Admin Section 4: Security PIN Change -->
+        <div class="p-4 bg-slate-950/60 rounded-xl border border-slate-800 space-y-2">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Change Admin PIN</h4>
+          <div class="flex gap-2">
+            <input type="password" id="newAdminPinInput" placeholder="New PIN code" maxlength="8" class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-white">
+            <button onclick="changeAdminPin()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700">
+              Update PIN
+            </button>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
 
   <!-- Notification Toast -->
   <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-slate-800 border border-slate-700 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3">
-    <i id="toastIcon" data-lucide="check-circle" class="w-5 h-5 text-brand-500"></i>
+    <i id="toastIcon" data-lucide="check-circle" class="w-5 h-5 text-brand-400"></i>
     <span id="toastMessage" class="text-xs font-medium">Notification message</span>
   </div>
 
   <script>
-    // --- Application State ---
-    const DEFAULT_ITEMS = [
-      "Classic Cheeseburger",
-      "Chicken Caesar Wrap",
-      "Falafel & Hummus Bowl",
-      "Margherita Pizza",
-      "Fries (Side)",
-      "Sparkling Water",
-      "Custom Item..."
+    // Initial Pre-loaded Menu Data for Aphrodite's Snacks
+    const INITIAL_APHRODITE_MENU = [
+      { id: 'm1', num: '1', name: "Special", cat: 'SANDWICHES', desc: "Mortatella, salami, ham, sausage", singlePrice: 4.00, doublePrice: 6.50 },
+      { id: 'm2', num: '2', name: "Turbo", cat: 'SANDWICHES', desc: "Roast pork, haloumi, lountza, sausage", singlePrice: 4.00, doublePrice: 6.50 },
+      { id: 'm3', num: '3', name: "Mix (Διάφορα)", cat: 'SANDWICHES', desc: "Lountza, haloumi, mortatella, salami, ham", singlePrice: 4.00, doublePrice: 6.50 },
+      { id: 'm4', num: '4', name: "Davos", cat: 'SANDWICHES', desc: "Mortatella, salami, ham, Frankfurt sausage", singlePrice: 4.00, doublePrice: 6.50 },
+      { id: 'm5', num: '5', name: "Number 5 (Νούμερο 5)", cat: 'SANDWICHES', desc: "Lountza, haloumi, cheese, bacon, mushrooms", singlePrice: 4.00, doublePrice: 6.50 },
+      { id: 'm6', num: '6', name: "Lountza & Haloumi", cat: 'SANDWICHES', desc: "Lountza and haloumi cheese", singlePrice: 4.00, doublePrice: 6.50 },
+      { id: 'm7', num: '7', name: "German Breakfast", cat: 'SANDWICHES', desc: "Frankfurt sausage, bacon, egg, cheese", singlePrice: 4.00, doublePrice: 6.50 },
+      { id: 'm8', num: '8', name: "Roast Pork & Haloumi", cat: 'SANDWICHES', desc: "Roast pork and haloumi cheese", singlePrice: 4.00, doublePrice: 6.50 },
+      { id: 'm9', num: '9', name: "Chinese (Κινέζικο)", cat: 'SANDWICHES', desc: "Chicken, cheese, mushrooms, sweet peppers, fries", singlePrice: 4.00, doublePrice: 6.50 },
+      { id: 'm10', num: '10', name: "Vegetarian", cat: 'SANDWICHES', desc: "Cheese, haloumi, mushrooms, sweet peppers, olives, fries", singlePrice: 4.00, doublePrice: 6.50 },
+      { id: 'm11', num: '11', name: "Chicken Barbeque", cat: 'SANDWICHES', desc: "Chicken, cheese, bbq sauce, oregano", singlePrice: 4.00, doublePrice: 6.50 },
+      { id: 'm12', num: '12', name: "Chicken, Cheese & Mushroom", cat: 'SANDWICHES', desc: "Chicken fillet, cheese, mushrooms", singlePrice: 4.00, doublePrice: 6.50 },
+      { id: 'm13', num: '13', name: "Chicken & Haloumi", cat: 'SANDWICHES', desc: "Chicken fillet and haloumi", singlePrice: 4.00, doublePrice: 6.50 },
+      { id: 'm14', num: '14', name: "Haloumi & Sausage", cat: 'SANDWICHES', desc: "Haloumi cheese and sausage", singlePrice: 4.00, doublePrice: 6.50 },
+      { id: 'm15', num: '15', name: "Breakfast Sandwich", cat: 'SANDWICHES', desc: "Bacon, haloumi, egg", singlePrice: 4.00, doublePrice: 6.50 },
+      { id: 'm16', num: '16', name: "Pizza Sandwich", cat: 'SANDWICHES', desc: "Bacon, salami, cheese, onions, peppers, mushrooms, oregano, tomato sauce", singlePrice: 4.00, doublePrice: 6.50 },
+      { id: 'm17', num: '17', name: "Fasting Sandwich (Νηστίσιμο)", cat: 'SANDWICHES', desc: "Mushrooms, sweet peppers, olives, french fries", singlePrice: 4.00, doublePrice: 6.50 },
+      
+      { id: 'm18', num: '18', name: "Aphrodite's Special Burger", cat: 'BURGERS', desc: "Beef burger, cheese, bacon, egg, mushrooms", singlePrice: 5.50 },
+      { id: 'm19', num: '19', name: "Beef Burger (Μπιφτέκι Βοδινό)", cat: 'BURGERS', desc: "Juicy beef burger", singlePrice: 4.00 },
+      { id: 'm20', num: '20', name: "Chicken Burger (Μπιφτέκι Κοτόπουλο)", cat: 'BURGERS', desc: "Chicken burger patty", singlePrice: 4.00 },
+      { id: 'm21', num: '21', name: "Veggie Burger (Χορτοφαγικό)", cat: 'BURGERS', desc: "Vegetable burger patty", singlePrice: 4.00 },
+
+      { id: 'm22', num: '22', name: "Hot Dog Standard", cat: 'HOT DOGS', desc: "Standard hot dog in bun", singlePrice: 3.00 },
+      { id: 'm23', num: '23', name: "Californian Hot Dog", cat: 'HOT DOGS', desc: "Frankfurt sausage with melted cheese", singlePrice: 3.50 },
+
+      { id: 'm24', num: 'F1', name: "French Fries (Πατάτες Τηγανητές)", cat: 'FRIES', desc: "Freshly cooked french fries", singlePrice: 1.80, doublePrice: 2.20, singleLabel: 'Small (€1.80)', doubleLabel: 'Large (€2.20)' },
+
+      { id: 'm25', num: '24', name: "Chicken Fillet Salad", cat: 'SALADS', desc: "Lettuce, chicken fillet, tomato, cucumber, olive oil, lemon, croutons", singlePrice: 4.00 },
+      { id: 'm26', num: '25', name: "Tuna Salad (Τονοσαλάτα)", cat: 'SALADS', desc: "Lettuce, tuna, tomato, cucumber, egg, corn, olive oil, lemon, croutons", singlePrice: 4.50 }
     ];
 
+    // State
     let state = {
+      menu: [],
       orders: [],
-      menuItems: [...DEFAULT_ITEMS],
-      cutoffTime: null, // Date object
+      cutoffTime: null,
       manualLocked: false,
-      checkedCallerItems: {}, // Track checked state for caller view
+      adminPin: '1234',
+      isAdminAuthenticated: false,
+      checkedCallerItems: {},
       currentTab: 'caller'
     };
 
     let timerInterval = null;
 
-    // --- Initialization ---
+    // Initialization
     window.addEventListener('DOMContentLoaded', () => {
-      loadStateFromStorage();
+      loadState();
       setupCutoffTimeIfNeeded();
       populateMenuDropdown();
       startTimer();
@@ -436,14 +592,15 @@
       lucide.createIcons();
     });
 
-    // --- Local Storage Sync ---
-    function loadStateFromStorage() {
-      const stored = localStorage.getItem('office_lunch_app_data');
-      if (stored) {
+    // Local Storage Persistence
+    function loadState() {
+      const saved = localStorage.getItem('aphrodite_snacks_app_v2');
+      if (saved) {
         try {
-          const parsed = JSON.parse(stored);
+          const parsed = JSON.parse(saved);
+          state.menu = parsed.menu || [...INITIAL_APHRODITE_MENU];
           state.orders = parsed.orders || [];
-          state.menuItems = parsed.menuItems || [...DEFAULT_ITEMS];
+          state.adminPin = parsed.adminPin || '1234';
           state.manualLocked = !!parsed.manualLocked;
           state.checkedCallerItems = parsed.checkedCallerItems || {};
           if (parsed.cutoffTimeString) {
@@ -451,51 +608,49 @@
           }
         } catch (e) {
           console.error('Failed to parse state from localStorage', e);
+          state.menu = [...INITIAL_APHRODITE_MENU];
         }
+      } else {
+        state.menu = [...INITIAL_APHRODITE_MENU];
       }
     }
 
-    function saveStateToStorage() {
-      const dataToSave = {
+    function saveState() {
+      const data = {
+        menu: state.menu,
         orders: state.orders,
-        menuItems: state.menuItems,
+        adminPin: state.adminPin,
         manualLocked: state.manualLocked,
         checkedCallerItems: state.checkedCallerItems,
         cutoffTimeString: state.cutoffTime ? state.cutoffTime.toISOString() : null
       };
-      localStorage.setItem('office_lunch_app_data', JSON.stringify(dataToSave));
+      localStorage.setItem('aphrodite_snacks_app_v2', JSON.stringify(data));
     }
 
-    // --- Cutoff Time Logic ---
+    // Cutoff Time & Timer Logic
     function setupCutoffTimeIfNeeded() {
       if (!state.cutoffTime || isNaN(state.cutoffTime.getTime()) || state.cutoffTime < new Date(new Date().setHours(0,0,0,0))) {
-        // Default cutoff: Today at 11:30 AM
-        const now = new Date();
         const defaultCutoff = new Date();
         defaultCutoff.setHours(11, 30, 0, 0);
-
-        // If 11:30 AM has already passed today, set to 1 hour from now for demo purposes
-        if (now > defaultCutoff) {
-          defaultCutoff.setTime(now.getTime() + 60 * 60 * 1000);
+        if (new Date() > defaultCutoff) {
+          defaultCutoff.setTime(new Date().getTime() + 45 * 60 * 1000); // 45m ahead if past 11:30
         }
         state.cutoffTime = defaultCutoff;
-        saveStateToStorage();
+        saveState();
       }
 
-      // Sync Admin Time Input field
-      const hours = String(state.cutoffTime.getHours()).padStart(2, '0');
-      const minutes = String(state.cutoffTime.getMinutes()).padStart(2, '0');
-      document.getElementById('adminCutoffInput').value = `${hours}:${minutes}`;
-      updateCutoffTimeDisplay();
+      const h = String(state.cutoffTime.getHours()).padStart(2, '0');
+      const m = String(state.cutoffTime.getMinutes()).padStart(2, '0');
+      document.getElementById('adminCutoffInput').value = `${h}:${m}`;
+      updateCutoffDisplay();
     }
 
-    function updateCutoffTimeDisplay() {
+    function updateCutoffDisplay() {
       if (!state.cutoffTime) return;
       const timeStr = state.cutoffTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       document.getElementById('cutoffTimeDisplay').textContent = `Cutoff: Today at ${timeStr}`;
     }
 
-    // --- Timer Engine ---
     function startTimer() {
       if (timerInterval) clearInterval(timerInterval);
 
@@ -506,25 +661,21 @@
         const banner = document.getElementById('timerBanner');
         const badge = document.getElementById('statusBadge');
         const submitBtn = document.getElementById('submitOrderBtn');
-        const closedNotice = document.getElementById('formClosedNotice');
+        const notice = document.getElementById('formClosedNotice');
 
         if (diff <= 0 || state.manualLocked) {
-          // EXPIRED OR LOCKED
           document.getElementById('timerHours').textContent = '00';
           document.getElementById('timerMinutes').textContent = '00';
           document.getElementById('timerSeconds').textContent = '00';
 
-          banner.classList.remove('timer-glow');
-          banner.classList.add('timer-glow-expired', 'border-rose-500/30');
-
-          badge.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20";
-          badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-500"></span> ORDERING CLOSED`;
+          banner.className = "relative overflow-hidden rounded-2xl glass-card p-6 sm:p-8 border border-rose-500/30 transition-all duration-300 timer-glow-expired";
+          badge.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-500/10 text-rose-400 border border-rose-500/30";
+          badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-500"></span> ORDERING LOCKED`;
 
           submitBtn.disabled = true;
-          submitBtn.classList.add('opacity-50', 'cursor-not-allowed', 'hover:bg-brand-600');
-          closedNotice.classList.remove('hidden');
+          submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+          notice.classList.remove('hidden');
         } else {
-          // ACTIVE
           const hours = Math.floor(diff / (1000 * 60 * 60));
           const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
           const secs = Math.floor((diff % (1000 * 60)) / 1000);
@@ -533,15 +684,13 @@
           document.getElementById('timerMinutes').textContent = String(mins).padStart(2, '0');
           document.getElementById('timerSeconds').textContent = String(secs).padStart(2, '0');
 
-          banner.classList.remove('timer-glow-expired', 'border-rose-500/30');
-          banner.classList.add('timer-glow');
-
-          badge.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-brand-500/10 text-brand-400 border border-brand-500/20";
+          banner.className = "relative overflow-hidden rounded-2xl glass-card p-6 sm:p-8 border border-slate-800 transition-all duration-300 timer-glow";
+          badge.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-brand-500/10 text-brand-400 border border-brand-500/30";
           badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-brand-500 animate-pulse"></span> Accepting Orders`;
 
           submitBtn.disabled = false;
           submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-          closedNotice.classList.add('hidden');
+          notice.classList.add('hidden');
         }
       }
 
@@ -549,92 +698,170 @@
       timerInterval = setInterval(update, 1000);
     }
 
-    // --- Dropdown Management ---
     function populateMenuDropdown() {
       const select = document.getElementById('itemSelect');
+      const catFilter = document.getElementById('categoryFilter').value;
       select.innerHTML = '';
-      state.menuItems.forEach(item => {
+
+      const filtered = state.menu.filter(m => catFilter === 'ALL' || m.cat === catFilter);
+
+      filtered.forEach(item => {
         const opt = document.createElement('option');
-        opt.value = item;
-        opt.textContent = item;
+        opt.value = item.id;
+        const priceStr = item.doublePrice 
+          ? `(Single €${item.singlePrice.toFixed(2)} / Double €${item.doublePrice.toFixed(2)})`
+          : `(€${item.singlePrice.toFixed(2)})`;
+        opt.textContent = `#${item.num} ${item.name} ${priceStr}`;
         select.appendChild(opt);
       });
-      
-      // Update admin textarea
-      document.getElementById('adminMenuItemsInput').value = state.menuItems.join(', ');
+
       handleItemSelectChange();
     }
 
-    function handleItemSelectChange() {
-      const select = document.getElementById('itemSelect');
-      const customContainer = document.getElementById('customItemContainer');
-      const customInput = document.getElementById('customItemName');
-
-      if (select.value === "Custom Item...") {
-        customContainer.classList.remove('hidden');
-        customInput.required = true;
-      } else {
-        customContainer.classList.add('hidden');
-        customInput.required = false;
-      }
+    function filterMenuItemsByCategory() {
+      populateMenuDropdown();
     }
 
-    // --- STREAMING_CHUNK:Handling form submission & order editing... ---
+    function handleItemSelectChange() {
+      const selectVal = document.getElementById('itemSelect').value;
+      const selectedItem = state.menu.find(m => m.id === selectVal);
+
+      const sizeContainer = document.getElementById('sizeContainer');
+      const itemSizeSelect = document.getElementById('itemSize');
+      const breadContainer = document.getElementById('breadTypeContainer');
+      const extrasContainer = document.getElementById('extrasContainer');
+
+      if (!selectedItem) return;
+
+      // Handle Size Option (Single/Double or Small/Large)
+      if (selectedItem.doublePrice) {
+        sizeContainer.classList.remove('hidden');
+        itemSizeSelect.innerHTML = '';
+
+        const opt1 = document.createElement('option');
+        opt1.value = 'SINGLE';
+        opt1.textContent = selectedItem.singleLabel || `Single / Μονό (€${selectedItem.singlePrice.toFixed(2)})`;
+
+        const opt2 = document.createElement('option');
+        opt2.value = 'DOUBLE';
+        opt2.textContent = selectedItem.doubleLabel || `Double / Διπλό (€${selectedItem.doublePrice.toFixed(2)})`;
+
+        itemSizeSelect.appendChild(opt1);
+        itemSizeSelect.appendChild(opt2);
+      } else {
+        sizeContainer.classList.add('hidden');
+      }
+
+      // Bread type options for Sandwiches & Burgers
+      if (selectedItem.cat === 'SANDWICHES' || selectedItem.cat === 'BURGERS') {
+        breadContainer.classList.remove('hidden');
+      } else {
+        breadContainer.classList.add('hidden');
+      }
+
+      // Extras for Sandwiches, Burgers, and Hotdogs
+      if (['SANDWICHES', 'BURGERS', 'HOT DOGS'].includes(selectedItem.cat)) {
+        extrasContainer.classList.remove('hidden');
+      } else {
+        extrasContainer.classList.add('hidden');
+      }
+
+      calculateEstimatedPrice();
+    }
+
+    function calculateEstimatedPrice() {
+      const itemId = document.getElementById('itemSelect').value;
+      const item = state.menu.find(m => m.id === itemId);
+      if (!item) return;
+
+      const sizeVal = document.getElementById('itemSize').value;
+      const qty = parseInt(document.getElementById('itemQty').value, 10) || 1;
+
+      let basePrice = (sizeVal === 'DOUBLE' && item.doublePrice) ? item.doublePrice : item.singlePrice;
+
+      // Extras count (€0.50 each, onions free)
+      let extrasCost = 0;
+      const checkboxes = document.querySelectorAll('.extra-check:checked');
+      checkboxes.forEach(cb => {
+        if (!cb.value.includes('Free')) {
+          extrasCost += 0.50;
+        }
+      });
+
+      const total = (basePrice + extrasCost) * qty;
+      document.getElementById('livePriceDisplay').textContent = `€${total.toFixed(2)}`;
+      return total;
+    }
+
     function handleOrderSubmit(e) {
       e.preventDefault();
 
-      // Check timer lock
       if (new Date() >= state.cutoffTime || state.manualLocked) {
-        showToast("Ordering is locked!", "error");
+        showToast("Ordering is currently locked", "error");
         return;
       }
 
       const name = document.getElementById('userName').value.trim();
-      const selectVal = document.getElementById('itemSelect').value;
-      const customVal = document.getElementById('customItemName').value.trim();
+      const itemId = document.getElementById('itemSelect').value;
+      const item = state.menu.find(m => m.id === itemId);
       const qty = parseInt(document.getElementById('itemQty').value, 10) || 1;
-      const category = document.getElementById('itemCategory').value;
+      const sizeVal = item.doublePrice ? document.getElementById('itemSize').value : 'SINGLE';
+      const breadVal = (item.cat === 'SANDWICHES' || item.cat === 'BURGERS') ? document.getElementById('breadType').value : '';
       const comments = document.getElementById('itemComments').value.trim();
       const editId = document.getElementById('editOrderId').value;
 
-      const finalItemName = (selectVal === "Custom Item...") ? customVal : selectVal;
+      // Collect Extras
+      const extras = [];
+      document.querySelectorAll('.extra-check:checked').forEach(cb => extras.push(cb.value));
 
-      if (!name || !finalItemName) {
+      const unitPrice = (sizeVal === 'DOUBLE' && item.doublePrice) ? item.doublePrice : item.singlePrice;
+      const extrasPrice = extras.filter(e => !e.includes('Free')).length * 0.50;
+      const totalPrice = (unitPrice + extrasPrice) * qty;
+
+      if (!name || !item) {
         showToast("Please complete required fields", "error");
         return;
       }
 
       if (editId) {
-        // Edit Existing Order
-        const index = state.orders.findIndex(o => o.id === editId);
-        if (index !== -1) {
-          state.orders[index] = {
-            ...state.orders[index],
+        const idx = state.orders.findIndex(o => o.id === editId);
+        if (idx !== -1) {
+          state.orders[idx] = {
+            ...state.orders[idx],
             name,
-            item: finalItemName,
+            itemId: item.id,
+            itemNum: item.num,
+            itemName: item.name,
+            category: item.cat,
             qty,
-            category,
+            size: sizeVal,
+            bread: breadVal,
+            extras,
             comments,
-            updatedAt: new Date().toISOString()
+            totalPrice
           };
-          showToast("Order updated successfully!");
+          showToast("Order updated!");
         }
       } else {
-        // Create New Order
         const newOrder = {
-          id: 'ord_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+          id: 'ord_' + Date.now(),
           name,
-          item: finalItemName,
+          itemId: item.id,
+          itemNum: item.num,
+          itemName: item.name,
+          category: item.cat,
           qty,
-          category,
+          size: sizeVal,
+          bread: breadVal,
+          extras,
           comments,
-          createdAt: new Date().toISOString()
+          totalPrice
         };
         state.orders.push(newOrder);
-        showToast(`Order added for ${name}!`);
+        showToast(`Order saved for ${name}!`);
       }
 
-      saveStateToStorage();
+      saveState();
       resetForm();
       renderAll();
     }
@@ -645,35 +872,31 @@
 
       document.getElementById('editOrderId').value = order.id;
       document.getElementById('userName').value = order.name;
+      document.getElementById('categoryFilter').value = 'ALL';
+      populateMenuDropdown();
+
+      document.getElementById('itemSelect').value = order.itemId;
+      handleItemSelectChange();
+
+      if (order.size) document.getElementById('itemSize').value = order.size;
+      if (order.bread) document.getElementById('breadType').value = order.bread;
       document.getElementById('itemQty').value = order.qty;
-      document.getElementById('itemCategory').value = order.category;
       document.getElementById('itemComments').value = order.comments || '';
 
-      const select = document.getElementById('itemSelect');
-      if (state.menuItems.includes(order.item)) {
-        select.value = order.item;
-        document.getElementById('customItemContainer').classList.add('hidden');
-      } else {
-        select.value = "Custom Item...";
-        document.getElementById('customItemContainer').classList.remove('hidden');
-        document.getElementById('customItemName').value = order.item;
-      }
+      // Check checkboxes
+      document.querySelectorAll('.extra-check').forEach(cb => {
+        cb.checked = order.extras.includes(cb.value);
+      });
 
+      calculateEstimatedPrice();
       document.getElementById('submitBtnText').textContent = "Update Order";
       document.getElementById('cancelEditBtn').classList.remove('hidden');
-
-      // Scroll form into view on mobile
-      document.getElementById('orderForm').scrollIntoView({ behavior: 'smooth' });
-    }
-
-    function cancelEdit() {
-      resetForm();
     }
 
     function deleteOrder(id) {
-      if (confirm("Are you sure you want to remove this order?")) {
+      if (confirm("Remove this order?")) {
         state.orders = state.orders.filter(o => o.id !== id);
-        saveStateToStorage();
+        saveState();
         renderAll();
         showToast("Order removed");
       }
@@ -683,25 +906,29 @@
       document.getElementById('editOrderId').value = '';
       document.getElementById('orderForm').reset();
       document.getElementById('itemQty').value = 1;
+      document.querySelectorAll('.extra-check').forEach(cb => cb.checked = false);
       document.getElementById('submitBtnText').textContent = "Submit Order";
       document.getElementById('cancelEditBtn').classList.add('hidden');
       handleItemSelectChange();
     }
 
-    // --- STREAMING_CHUNK:Rendering Dashboard Tab 1 (Aggregated Phone View)... ---
+    function cancelEdit() {
+      resetForm();
+    }
+
     function renderAll() {
-      renderCounts();
+      renderGrandTotal();
       renderCallerSummary();
       renderIndividualOrders();
       lucide.createIcons();
     }
 
-    function renderCounts() {
+    function renderGrandTotal() {
       const totalItems = state.orders.reduce((sum, o) => sum + o.qty, 0);
-      const uniquePeople = new Set(state.orders.map(o => o.name.toLowerCase().trim())).size;
+      const grandTotal = state.orders.reduce((sum, o) => sum + o.totalPrice, 0);
 
       document.getElementById('totalItemsCount').textContent = totalItems;
-      document.getElementById('totalPeopleCount').textContent = uniquePeople;
+      document.getElementById('grandTotalDisplay').textContent = `€${grandTotal.toFixed(2)}`;
     }
 
     function renderCallerSummary() {
@@ -713,51 +940,60 @@
           <div class="text-center py-12 border border-dashed border-slate-800 rounded-2xl">
             <i data-lucide="shopping-bag" class="w-10 h-10 text-slate-600 mx-auto mb-2"></i>
             <p class="text-sm font-medium text-slate-400">No orders placed yet.</p>
-            <p class="text-xs text-slate-600">Items will automatically group here for easy calling!</p>
+            <p class="text-xs text-slate-600">Submitted items will automatically group here for telephone ordering!</p>
           </div>
         `;
         return;
       }
 
-      // Group orders by item name
+      // Group orders by item name and size
       const grouped = {};
       state.orders.forEach(o => {
-        const itemKey = o.item.trim();
-        if (!grouped[itemKey]) {
-          grouped[itemKey] = {
+        const key = `#${o.itemNum} ${o.itemName} (${o.size})`;
+        if (!grouped[key]) {
+          grouped[key] = {
+            num: o.itemNum,
+            name: o.itemName,
+            size: o.size,
+            cat: o.category,
             totalQty: 0,
-            category: o.category,
+            subtotalPrice: 0,
             details: []
           };
         }
-        grouped[itemKey].totalQty += o.qty;
-        grouped[itemKey].details.push({
-          name: o.name,
+        grouped[key].totalQty += o.qty;
+        grouped[key].subtotalPrice += o.totalPrice;
+        grouped[key].details.push({
+          person: o.name,
           qty: o.qty,
+          bread: o.bread,
+          extras: o.extras,
           comments: o.comments
         });
       });
 
-      // Render grouped card list
-      Object.keys(grouped).forEach((itemName, idx) => {
-        const itemData = grouped[itemName];
-        const isChecked = !!state.checkedCallerItems[itemName];
+      Object.keys(grouped).forEach(key => {
+        const itemData = grouped[key];
+        const isChecked = !!state.checkedCallerItems[key];
 
         const card = document.createElement('div');
         card.className = `p-4 rounded-xl border transition-all ${
-          isChecked 
-            ? 'bg-slate-950/40 border-slate-800/50 opacity-60' 
-            : 'bg-slate-900/80 border-slate-800 hover:border-slate-700'
+          isChecked ? 'bg-slate-950/40 border-slate-800/50 opacity-50' : 'bg-slate-900/80 border-slate-800 hover:border-slate-700'
         }`;
 
-        // Generate line items with names & comments
         const detailsHtml = itemData.details.map(d => {
-          const commentBadge = d.comments 
-            ? `<span class="ml-2 px-2 py-0.5 text-[11px] font-medium rounded-md bg-amber-500/10 text-amber-300 border border-amber-500/20"> Note: "${escapeHtml(d.comments)}"</span>` 
+          const notes = [];
+          if (d.bread && d.bread !== 'White Bread') notes.push(d.bread);
+          if (d.extras && d.extras.length > 0) notes.push(d.extras.map(e => e.split(' ')[0]).join(', '));
+          if (d.comments) notes.push(`Note: "${escapeHtml(d.comments)}"`);
+
+          const notesBadge = notes.length > 0 
+            ? `<span class="ml-2 px-2 py-0.5 text-[11px] font-semibold rounded bg-amber-500/10 text-amber-300 border border-amber-500/20">${notes.join(' | ')}</span>`
             : '';
+
           return `<div class="text-xs text-slate-300 py-1 border-b border-slate-800/40 last:border-0 flex items-start justify-between">
-            <span class="font-medium text-slate-200">${escapeHtml(d.name)} <span class="text-slate-400 font-normal">(x${d.qty})</span></span>
-            ${commentBadge}
+            <span class="font-semibold text-slate-200">${escapeHtml(d.person)} (x${d.qty})</span>
+            ${notesBadge}
           </div>`;
         }).join('');
 
@@ -767,29 +1003,32 @@
               <input 
                 type="checkbox" 
                 ${isChecked ? 'checked' : ''} 
-                onchange="toggleCallerCheck('${escapeJsString(itemName)}', this.checked)"
-                class="mt-1 w-4 h-4 rounded border-slate-700 text-brand-600 focus:ring-brand-500 bg-slate-950 cursor-pointer"
+                onchange="toggleCallerCheck('${escapeJsString(key)}', this.checked)"
+                class="mt-1 w-4 h-4 rounded border-slate-700 text-brand-500 focus:ring-brand-500 bg-slate-950 cursor-pointer"
               >
               <div>
                 <div class="flex items-center gap-2">
-                  <h4 class="text-base font-bold text-white ${isChecked ? 'line-through text-slate-500' : ''}">
-                    ${escapeHtml(itemName)}
+                  <h4 class="text-base font-extrabold text-white ${isChecked ? 'line-through text-slate-500' : ''}">
+                    #${itemData.num} ${escapeHtml(itemData.name)}
                   </h4>
-                  <span class="px-2 py-0.5 text-[10px] uppercase font-semibold rounded-full bg-slate-800 text-slate-400 border border-slate-700">
-                    ${escapeHtml(itemData.category || 'Mains')}
+                  <span class="px-2 py-0.5 text-[10px] uppercase font-bold rounded bg-slate-800 text-slate-300 border border-slate-700">
+                    ${itemData.size}
                   </span>
                 </div>
-                <p class="text-xs text-slate-400 mt-0.5">Total Quantity to order</p>
+                <p class="text-xs text-slate-400 mt-0.5">Category: ${itemData.cat}</p>
               </div>
             </div>
 
-            <div class="px-3 py-1 bg-brand-500/10 border border-brand-500/20 rounded-xl text-brand-400 font-mono text-lg font-bold">
-              x${itemData.totalQty}
+            <div class="text-right">
+              <span class="inline-block px-3 py-1 bg-brand-500/10 border border-brand-500/30 rounded-xl text-brand-400 font-mono text-lg font-black">
+                x${itemData.totalQty}
+              </span>
+              <span class="block text-[11px] font-mono text-slate-400 mt-0.5">€${itemData.subtotalPrice.toFixed(2)}</span>
             </div>
           </div>
 
           <div class="mt-3 pl-7 pt-2 border-t border-slate-800/60 bg-slate-950/40 rounded-lg p-2.5">
-            <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Sub-Breakdown & Notes:</p>
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Sub-Breakdown & Notes:</p>
             ${detailsHtml}
           </div>
         `;
@@ -798,42 +1037,36 @@
       });
     }
 
-    function toggleCallerCheck(itemName, checked) {
-      state.checkedCallerItems[itemName] = checked;
-      saveStateToStorage();
+    function toggleCallerCheck(key, checked) {
+      state.checkedCallerItems[key] = checked;
+      saveState();
       renderCallerSummary();
     }
 
     function resetCallerCheckboxes() {
       state.checkedCallerItems = {};
-      saveStateToStorage();
+      saveState();
       renderCallerSummary();
-      showToast("Checkmarks cleared!");
+      showToast("Checkmarks cleared");
     }
 
-    // --- STREAMING_CHUNK:Rendering Dashboard Tab 2 (Individual Distribution View)... ---
     function renderIndividualOrders() {
       const container = document.getElementById('individualOrdersList');
-      const searchTerm = (document.getElementById('searchOrdersInput')?.value || '').toLowerCase();
+      const search = (document.getElementById('searchOrdersInput')?.value || '').toLowerCase();
       container.innerHTML = '';
 
       const filtered = state.orders.filter(o => 
-        o.name.toLowerCase().includes(searchTerm) || 
-        o.item.toLowerCase().includes(searchTerm) ||
-        (o.comments && o.comments.toLowerCase().includes(searchTerm))
+        o.name.toLowerCase().includes(search) ||
+        o.itemName.toLowerCase().includes(search) ||
+        (o.comments && o.comments.toLowerCase().includes(search))
       );
 
       if (filtered.length === 0) {
-        container.innerHTML = `
-          <div class="text-center py-12 border border-dashed border-slate-800 rounded-2xl">
-            <p class="text-sm font-medium text-slate-400">No matching individual orders found.</p>
-          </div>
-        `;
+        container.innerHTML = `<p class="text-center py-10 text-xs text-slate-500">No individual orders match your search.</p>`;
         return;
       }
 
-      // Sort alphabetically by Name
-      filtered.sort((a, b) => a.name.localeCompare(b.name));
+      filtered.sort((a,b) => a.name.localeCompare(b.name));
 
       filtered.forEach(o => {
         const card = document.createElement('div');
@@ -846,31 +1079,19 @@
             </div>
             <div>
               <div class="flex items-center gap-2">
-                <span class="text-sm font-semibold text-white">${escapeHtml(o.name)}</span>
+                <span class="text-sm font-bold text-white">${escapeHtml(o.name)}</span>
                 <span class="text-xs font-mono font-bold text-brand-400 bg-brand-500/10 px-2 py-0.5 rounded border border-brand-500/20">
-                  x${o.qty}
+                  x${o.qty} (€${o.totalPrice.toFixed(2)})
                 </span>
               </div>
-              <p class="text-xs text-slate-300 font-medium mt-0.5">${escapeHtml(o.item)}</p>
-              ${o.comments ? `<p class="text-[11px] text-amber-300 italic mt-0.5">"${escapeHtml(o.comments)}"</p>` : ''}
+              <p class="text-xs text-slate-300 font-medium mt-0.5">#${o.itemNum} ${escapeHtml(o.itemName)} (${o.size})</p>
+              ${o.comments ? `<p class="text-[11px] text-amber-300 italic">"${escapeHtml(o.comments)}"</p>` : ''}
             </div>
           </div>
 
           <div class="flex items-center gap-1">
-            <button 
-              onclick="editOrder('${o.id}')" 
-              class="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition"
-              title="Edit Order"
-            >
-              <i data-lucide="edit-2" class="w-4 h-4"></i>
-            </button>
-            <button 
-              onclick="deleteOrder('${o.id}')" 
-              class="p-1.5 text-slate-400 hover:text-rose-400 rounded-lg hover:bg-slate-800 transition"
-              title="Delete Order"
-            >
-              <i data-lucide="trash-2" class="w-4 h-4"></i>
-            </button>
+            <button onclick="editOrder('${o.id}')" class="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
+            <button onclick="deleteOrder('${o.id}')" class="p-1.5 text-slate-400 hover:text-rose-400 rounded-lg hover:bg-slate-800"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
           </div>
         `;
 
@@ -878,7 +1099,6 @@
       });
     }
 
-    // --- STREAMING_CHUNK:Tab switching logic & Phone script generator... ---
     function switchTab(tab) {
       state.currentTab = tab;
       const callerBtn = document.getElementById('tabCaller');
@@ -887,13 +1107,13 @@
       const indivVal = document.getElementById('viewIndividual');
 
       if (tab === 'caller') {
-        callerBtn.className = "px-3 py-1.5 text-xs font-semibold rounded-lg transition flex items-center gap-1.5 bg-brand-600 text-white shadow";
-        individualBtn.className = "px-3 py-1.5 text-xs font-semibold rounded-lg transition flex items-center gap-1.5 text-slate-400 hover:text-white";
+        callerBtn.className = "px-3 py-1.5 text-xs font-bold rounded-lg transition flex items-center gap-1.5 bg-brand-500 text-slate-950 shadow";
+        individualBtn.className = "px-3 py-1.5 text-xs font-bold rounded-lg transition flex items-center gap-1.5 text-slate-400 hover:text-white";
         callerVal.classList.remove('hidden');
         indivVal.classList.add('hidden');
       } else {
-        individualBtn.className = "px-3 py-1.5 text-xs font-semibold rounded-lg transition flex items-center gap-1.5 bg-brand-600 text-white shadow";
-        callerBtn.className = "px-3 py-1.5 text-xs font-semibold rounded-lg transition flex items-center gap-1.5 text-slate-400 hover:text-white";
+        individualBtn.className = "px-3 py-1.5 text-xs font-bold rounded-lg transition flex items-center gap-1.5 bg-brand-500 text-slate-950 shadow";
+        callerBtn.className = "px-3 py-1.5 text-xs font-bold rounded-lg transition flex items-center gap-1.5 text-slate-400 hover:text-white";
         indivVal.classList.remove('hidden');
         callerVal.classList.add('hidden');
       }
@@ -905,35 +1125,35 @@
         return;
       }
 
-      // Group items
       const grouped = {};
       state.orders.forEach(o => {
-        const itemKey = o.item.trim();
-        if (!grouped[itemKey]) {
-          grouped[itemKey] = { totalQty: 0, details: [] };
-        }
-        grouped[itemKey].totalQty += o.qty;
-        if (o.comments) {
-          grouped[itemKey].details.push(`${o.qty}x with "${o.comments}" (${o.name})`);
-        }
-      });
+        const key = `#${o.itemNum} ${o.itemName} (${o.size})`;
+        if (!grouped[key]) grouped[key] = { totalQty: 0, details: [] };
+        grouped[key].totalQty += o.qty;
+        
+        const notes = [];
+        if (o.bread && o.bread !== 'White Bread') notes.push(o.bread);
+        if (o.extras.length > 0) notes.push(o.extras.map(e => e.split(' ')[0]).join(', '));
+        if (o.comments) notes.push(o.comments);
 
-      let scriptText = `📞 OFFICE LUNCH ORDER SUMMARY (${new Date().toLocaleDateString()})\n\n`;
-      Object.keys(grouped).forEach(item => {
-        const g = grouped[item];
-        scriptText += `• ${g.totalQty}x ${item}\n`;
-        if (g.details.length > 0) {
-          g.details.forEach(note => {
-            scriptText += `   - Note: ${note}\n`;
-          });
+        if (notes.length > 0) {
+          grouped[key].details.push(`${o.qty}x for ${o.name}: ${notes.join(' | ')}`);
         }
       });
 
-      scriptText += `\nTotal Items: ${state.orders.reduce((sum, o) => sum + o.qty, 0)}`;
+      let script = `📞 APHRODITE'S SNACKS LUNCH ORDER (22.776480 / 22.774132)\n\n`;
+      Object.keys(grouped).forEach(k => {
+        script += `• ${grouped[k].totalQty}x ${k}\n`;
+        grouped[k].details.forEach(d => {
+          script += `   - ${d}\n`;
+        });
+      });
 
-      // Fallback copy execCommand for iframe compatibility
+      const grandTotal = state.orders.reduce((sum, o) => sum + o.totalPrice, 0);
+      script += `\nTotal Items: ${state.orders.reduce((sum, o) => sum + o.qty, 0)} | Estimated Cost: €${grandTotal.toFixed(2)}`;
+
       const tempTextArea = document.createElement('textarea');
-      tempTextArea.value = scriptText;
+      tempTextArea.value = script;
       document.body.appendChild(tempTextArea);
       tempTextArea.select();
       document.execCommand('copy');
@@ -942,72 +1162,214 @@
       showToast("Phone script copied to clipboard!");
     }
 
-    // --- STREAMING_CHUNK:Admin settings and modal controls... ---
-    function toggleAdminModal(show) {
-      const modal = document.getElementById('adminModal');
-      if (show) {
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
+    function openAdminModal() {
+      document.getElementById('adminModal').classList.remove('hidden');
+      document.getElementById('adminModal').classList.add('flex');
+
+      if (state.isAdminAuthenticated) {
+        showAdminDashboard();
       } else {
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
+        document.getElementById('adminPinAuthView').classList.remove('hidden');
+        document.getElementById('adminDashboardView').classList.add('hidden');
       }
     }
 
-    function updateCutoffTime() {
-      const timeVal = document.getElementById('adminCutoffInput').value;
-      if (!timeVal) return;
+    function closeAdminModal() {
+      document.getElementById('adminModal').classList.add('hidden');
+      document.getElementById('adminModal').classList.remove('flex');
+    }
 
-      const [hours, minutes] = timeVal.split(':');
+    function authenticateAdminPin(e) {
+      e.preventDefault();
+      const inputPin = document.getElementById('adminPinInput').value;
+      if (inputPin === state.adminPin) {
+        state.isAdminAuthenticated = true;
+        showAdminDashboard();
+        showToast("Admin access granted");
+      } else {
+        showToast("Incorrect PIN code!", "error");
+      }
+    }
+
+    function showAdminDashboard() {
+      document.getElementById('adminPinAuthView').classList.add('hidden');
+      document.getElementById('adminDashboardView').classList.remove('hidden');
+      renderAdminMenuList();
+      
+      const lockBtn = document.getElementById('manualLockBtn');
+      if (state.manualLocked) {
+        lockBtn.textContent = "Locked";
+        lockBtn.className = "px-3 py-1.5 text-xs font-bold rounded-xl bg-rose-500/20 text-rose-300 border border-rose-500/30";
+      } else {
+        lockBtn.textContent = "Unlocked";
+        lockBtn.className = "px-3 py-1.5 text-xs font-bold rounded-xl bg-slate-800 text-slate-300 border border-slate-700";
+      }
+    }
+
+    function updateCutoffTimeFromInput() {
+      const val = document.getElementById('adminCutoffInput').value;
+      if (!val) return;
+      const [h, m] = val.split(':');
       const newCutoff = new Date();
-      newCutoff.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
+      newCutoff.setHours(parseInt(h,10), parseInt(m,10), 0, 0);
 
       state.cutoffTime = newCutoff;
-      saveStateToStorage();
-      updateCutoffTimeDisplay();
+      saveState();
+      updateCutoffDisplay();
       startTimer();
       showToast("Cutoff time updated!");
-      toggleAdminModal(false);
     }
 
-    function saveMenuItems() {
-      const raw = document.getElementById('adminMenuItemsInput').value;
-      const items = raw.split(',').map(s => s.trim()).filter(Boolean);
-      if (!items.includes("Custom Item...")) {
-        items.push("Custom Item...");
+    function extendTimerMinutes(mins) {
+      const now = new Date();
+      const base = (state.cutoffTime && state.cutoffTime > now) ? state.cutoffTime : now;
+      state.cutoffTime = new Date(base.getTime() + mins * 60 * 1000);
+      
+      const h = String(state.cutoffTime.getHours()).padStart(2, '0');
+      const m = String(state.cutoffTime.getMinutes()).padStart(2, '0');
+      document.getElementById('adminCutoffInput').value = `${h}:${m}`;
+
+      saveState();
+      updateCutoffDisplay();
+      startTimer();
+      showToast(`Timer extended +${mins} minutes`);
+    }
+
+    function renderAdminMenuList() {
+      const container = document.getElementById('adminMenuListContainer');
+      container.innerHTML = '';
+
+      state.menu.forEach(item => {
+        const row = document.createElement('div');
+        row.className = "p-2 bg-slate-900 rounded-lg border border-slate-800 flex items-center justify-between text-xs";
+        
+        const priceStr = item.doublePrice 
+          ? `Single €${item.singlePrice.toFixed(2)} / Double €${item.doublePrice.toFixed(2)}`
+          : `€${item.singlePrice.toFixed(2)}`;
+
+        row.innerHTML = `
+          <div>
+            <span class="font-bold text-white">#${item.num} ${escapeHtml(item.name)}</span>
+            <span class="text-[10px] text-slate-400 block">${item.cat} • ${priceStr}</span>
+          </div>
+          <div class="flex items-center gap-1">
+            <button onclick="editMenuItemAdmin('${item.id}')" class="p-1 text-slate-400 hover:text-white"><i data-lucide="edit-2" class="w-3.5 h-3.5"></i></button>
+            <button onclick="deleteMenuItemAdmin('${item.id}')" class="p-1 text-slate-400 hover:text-rose-400"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+      lucide.createIcons();
+    }
+
+    function openMenuEditForm() {
+      document.getElementById('editMenuId').value = '';
+      document.getElementById('menuNumberInput').value = '';
+      document.getElementById('menuNameInput').value = '';
+      document.getElementById('menuSinglePrice').value = '';
+      document.getElementById('menuDoublePrice').value = '';
+      document.getElementById('adminMenuEditCard').classList.remove('hidden');
+    }
+
+    function closeMenuEditForm() {
+      document.getElementById('adminMenuEditCard').classList.add('hidden');
+    }
+
+    function saveMenuItemAdmin() {
+      const id = document.getElementById('editMenuId').value;
+      const num = document.getElementById('menuNumberInput').value.trim();
+      const name = document.getElementById('menuNameInput').value.trim();
+      const cat = document.getElementById('menuCategoryInput').value;
+      const singlePrice = parseFloat(document.getElementById('menuSinglePrice').value);
+      const doublePriceVal = parseFloat(document.getElementById('menuDoublePrice').value);
+
+      if (!num || !name || isNaN(singlePrice)) {
+        showToast("Fill in Number, Name, & Single Price", "error");
+        return;
       }
-      state.menuItems = items;
-      saveStateToStorage();
+
+      if (id) {
+        const idx = state.menu.findIndex(m => m.id === id);
+        if (idx !== -1) {
+          state.menu[idx] = {
+            ...state.menu[idx],
+            num, name, cat,
+            singlePrice,
+            doublePrice: !isNaN(doublePriceVal) ? doublePriceVal : undefined
+          };
+        }
+      } else {
+        const newItem = {
+          id: 'm_' + Date.now(),
+          num, name, cat,
+          singlePrice,
+          doublePrice: !isNaN(doublePriceVal) ? doublePriceVal : undefined
+        };
+        state.menu.push(newItem);
+      }
+
+      saveState();
       populateMenuDropdown();
-      showToast("Menu presets updated!");
+      renderAdminMenuList();
+      closeMenuEditForm();
+      showToast("Menu item saved!");
+    }
+
+    function editMenuItemAdmin(id) {
+      const item = state.menu.find(m => m.id === id);
+      if (!item) return;
+
+      document.getElementById('editMenuId').value = item.id;
+      document.getElementById('menuNumberInput').value = item.num;
+      document.getElementById('menuNameInput').value = item.name;
+      document.getElementById('menuCategoryInput').value = item.cat;
+      document.getElementById('menuSinglePrice').value = item.singlePrice;
+      document.getElementById('menuDoublePrice').value = item.doublePrice || '';
+
+      document.getElementById('adminMenuEditCard').classList.remove('hidden');
+    }
+
+    function deleteMenuItemAdmin(id) {
+      if (confirm("Delete this menu item?")) {
+        state.menu = state.menu.filter(m => m.id !== id);
+        saveState();
+        populateMenuDropdown();
+        renderAdminMenuList();
+        showToast("Item deleted");
+      }
     }
 
     function toggleManualLock() {
       state.manualLocked = !state.manualLocked;
-      const btn = document.getElementById('manualLockToggle');
-      if (state.manualLocked) {
-        btn.textContent = "Locked";
-        btn.className = "px-3 py-1.5 text-xs font-semibold rounded-xl bg-rose-500/20 text-rose-300 border border-rose-500/30";
-      } else {
-        btn.textContent = "Unlocked";
-        btn.className = "px-3 py-1.5 text-xs font-semibold rounded-xl bg-slate-800 text-slate-300 border border-slate-700";
-      }
-      saveStateToStorage();
+      saveState();
       startTimer();
+      showAdminDashboard();
+      showToast(state.manualLocked ? "Form locked manually" : "Form unlocked");
     }
 
     function clearAllOrders() {
-      if (confirm("Are you sure you want to delete all current lunch orders?")) {
+      if (confirm("Clear all active orders for today?")) {
         state.orders = [];
         state.checkedCallerItems = {};
-        saveStateToStorage();
+        saveState();
         renderAll();
-        showToast("All orders cleared!");
-        toggleAdminModal(false);
+        showToast("All orders cleared");
       }
     }
 
-    // --- Helper Utilities ---
+    function changeAdminPin() {
+      const newPin = document.getElementById('newAdminPinInput').value.trim();
+      if (newPin.length < 4) {
+        showToast("PIN must be at least 4 digits", "error");
+        return;
+      }
+      state.adminPin = newPin;
+      saveState();
+      document.getElementById('newAdminPinInput').value = '';
+      showToast("Admin PIN updated successfully!");
+    }
+
+    // Utilities
     function showToast(msg, type = "success") {
       const toast = document.getElementById('toast');
       const toastMsg = document.getElementById('toastMessage');
@@ -1019,7 +1381,7 @@
         toastIcon.className = "w-5 h-5 text-rose-400";
       } else {
         toastIcon.setAttribute('data-lucide', 'check-circle');
-        toastIcon.className = "w-5 h-5 text-brand-500";
+        toastIcon.className = "w-5 h-5 text-brand-400";
       }
       lucide.createIcons();
 
@@ -1031,13 +1393,7 @@
 
     function escapeHtml(str) {
       return str.replace(/[&<>"']/g, function(m) {
-        return {
-          '&': '&amp;',
-          '<': '&lt;',
-          '>': '&gt;',
-          '"': '&quot;',
-          "'": '&#039;'
-        }[m];
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
       });
     }
 

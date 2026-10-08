@@ -42,7 +42,7 @@ window.onload = function() {
     populateMenuSelect();
     handleItemSelectChange();
     startCountdownTimer();
-  }, 400);
+  }, 300);
 };
 
 function initFirebaseListeners() {
@@ -131,9 +131,11 @@ function adjustQty(delta) {
 
 function updateItemPricePreview() {
   const sizeSelect = document.getElementById('size-select');
+  if (!sizeSelect || !sizeSelect.options[sizeSelect.selectedIndex]) return;
+  
   const selectedOption = sizeSelect.options[sizeSelect.selectedIndex];
-  const basePrice = parseFloat(selectedOption ? selectedOption.getAttribute('data-price') : 0);
-  const qty = parseInt(document.getElementById('item-qty').value);
+  const basePrice = parseFloat(selectedOption.getAttribute('data-price') || 0);
+  const qty = parseInt(document.getElementById('item-qty').value) || 1;
 
   const extras = document.querySelectorAll('input[name="extra"]:checked');
   const extrasCost = extras.length * 0.50;
@@ -142,22 +144,26 @@ function updateItemPricePreview() {
   document.getElementById('item-price-preview').textContent = '€' + itemTotal.toFixed(2);
 }
 
-function addToCart() {
-  const itemId = parseInt(document.getElementById('item-select').value);
+function getCurrentFormItem() {
+  const itemSelect = document.getElementById('item-select');
+  if (!itemSelect || !itemSelect.value) return null;
+
+  const itemId = parseInt(itemSelect.value);
   const item = menu.find(m => m.id === itemId);
-  if (!item) return;
+  if (!item) return null;
 
   const sizeSelect = document.getElementById('size-select');
+  const selectedOption = sizeSelect.options[sizeSelect.selectedIndex];
   const selectedSize = sizeSelect.value;
-  const basePrice = parseFloat(sizeSelect.options[sizeSelect.selectedIndex].getAttribute('data-price'));
-  const qty = parseInt(document.getElementById('item-qty').value);
-  
+  const basePrice = parseFloat(selectedOption ? selectedOption.getAttribute('data-price') : item.basePrice);
+  const qty = parseInt(document.getElementById('item-qty').value) || 1;
+
   const selectedExtras = Array.from(document.querySelectorAll('input[name="extra"]:checked')).map(cb => cb.value);
   const comment = document.getElementById('item-comment').value.trim();
 
   const itemTotal = (basePrice + (selectedExtras.length * 0.50)) * qty;
 
-  currentCart.push({
+  return {
     itemId,
     itemName: item.name,
     size: selectedSize,
@@ -165,8 +171,16 @@ function addToCart() {
     extras: selectedExtras,
     comment,
     totalPrice: itemTotal
-  });
+  };
+}
 
+function addToCart() {
+  const item = getCurrentFormItem();
+  if (!item) return;
+
+  currentCart.push(item);
+
+  // Reset form inputs after adding item to cart
   document.getElementById('item-comment').value = '';
   document.querySelectorAll('input[name="extra"]').forEach(cb => cb.checked = false);
   document.getElementById('item-qty').value = 1;
@@ -226,32 +240,43 @@ function submitFinalOrder() {
     return;
   }
 
-  const itemComment = document.getElementById('item-comment').value.trim();
-  const hasCheckedExtras = document.querySelectorAll('input[name="extra"]:checked').length > 0;
-  const currentQty = parseInt(document.getElementById('item-qty').value);
-
-  if (currentCart.length === 0 || itemComment || hasCheckedExtras || currentQty > 1) {
-    addToCart();
+  // If cart is empty, construct order directly from current selection form
+  let itemsToSubmit = [...currentCart];
+  if (itemsToSubmit.length === 0) {
+    const currentFormItem = getCurrentFormItem();
+    if (currentFormItem) {
+      itemsToSubmit.push(currentFormItem);
+    }
   }
 
-  if (currentCart.length === 0) {
+  if (itemsToSubmit.length === 0) {
     return;
   }
 
   const newOrder = {
     person: userName,
-    items: [...currentCart],
+    items: itemsToSubmit,
     timestamp: Date.now()
   };
 
+  // Immediate local update fallback so screen refreshes instantly
+  const localKey = 'temp_' + Date.now();
+  ordersMap[localKey] = newOrder;
+  renderOrders();
+
+  // Push to Firebase Realtime Database
   if (window.db) {
     const ordersRef = window.dbRef(window.db, 'orders');
     window.dbPush(ordersRef, newOrder);
   }
 
+  // Clear staged cart and form comment
   currentCart = [];
   renderCart();
+  document.getElementById('item-comment').value = '';
+  document.querySelectorAll('input[name="extra"]').forEach(cb => cb.checked = false);
 
+  // Visual button feedback
   const submitBtn = document.querySelector("button[onclick='submitFinalOrder()']");
   if (submitBtn) {
     const originalHTML = submitBtn.innerHTML;
@@ -394,7 +419,9 @@ function renderDistributionView() {
 
 function deleteOrder(key) {
   if (confirm("Remove this order?")) {
-    if (window.db) {
+    delete ordersMap[key];
+    renderOrders();
+    if (window.db && !key.startsWith('temp_')) {
       const itemRef = window.dbRef(window.db, `orders/${key}`);
       window.dbRemove(itemRef);
     }
@@ -580,6 +607,8 @@ function toggleFormLock() {
 
 function clearAllOrders() {
   if (confirm("Are you sure you want to clear all orders?")) {
+    ordersMap = {};
+    renderOrders();
     if (window.db) {
       const ordersRef = window.dbRef(window.db, 'orders');
       window.dbSet(ordersRef, null);
@@ -592,10 +621,32 @@ function copyPhoneScript() {
   let script = "Aphrodite's Snacks Order:\n\n";
   const checklist = document.querySelectorAll('#phone-checklist .p-3');
   checklist.forEach(card => {
-    const title = card.querySelector('span').textContent;
-    script += `• ${title}\n`;
-    const notes = card.querySelectorAll('.pl-6 div');
-    notes.forEach(n => script += `  ${n.textContent}\n`);
+    const titleText = card.querySelector('div')?.innerText || '';
+    if (titleText) script += `• ${titleText}\n`;
   });
   navigator.clipboard.writeText(script);
 }
+
+window.handleItemSelectChange = handleItemSelectChange;
+window.adjustQty = adjustQty;
+window.updateItemPricePreview = updateItemPricePreview;
+window.addToCart = addToCart;
+window.removeFromCart = removeFromCart;
+window.submitFinalOrder = submitFinalOrder;
+window.deleteOrder = deleteOrder;
+window.switchTab = switchTab;
+window.openLightbox = openLightbox;
+window.closeLightbox = closeLightbox;
+window.openAdminModal = openAdminModal;
+window.closeAdminModal = closeAdminModal;
+window.verifyAdminPIN = verifyAdminPIN;
+window.editAdminMenuItem = editAdminMenuItem;
+window.saveAdminMenuItem = saveAdminMenuItem;
+window.deleteAdminMenuItem = deleteAdminMenuItem;
+window.resetAdminMenuForm = resetAdminMenuForm;
+window.resetMenuToDefault = resetMenuToDefault;
+window.updateCutoffTime = updateCutoffTime;
+window.addTimerMinutes = addTimerMinutes;
+window.toggleFormLock = toggleFormLock;
+window.clearAllOrders = clearAllOrders;
+window.copyPhoneScript = copyPhoneScript;

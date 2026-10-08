@@ -1,25 +1,4 @@
-// Firebase Configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyDsqwJNqVHp7moMHka8dT0xllkEYioa2hg",
-  authDomain: "office-lunch-orders.firebaseapp.com",
-  databaseURL: "https://office-lunch-orders-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "office-lunch-orders",
-  storageBucket: "office-lunch-orders.firebasestorage.app",
-  messagingSenderId: "186331905102",
-  appId: "1:186331905102:web:b876c0fb394d4c36ad971f",
-  measurementId: "G-VGZV5SSE6Z"
-};
-
-// Initialize Firebase
-try {
-  if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-  }
-} catch (e) {
-  console.error("Firebase initialization error:", e);
-}
-const db = firebase.database();
-
+// Global Variables & Fallback Menu
 const DEFAULT_MENU = [
   { id: 1, category: "Sandwiches", name: "#1 Special (Mortatella, salami, ham, sausage)", basePrice: 4.00, hasDouble: true },
   { id: 2, category: "Sandwiches", name: "#2 Turbo (Roast pork, haloumi, lountza, sausage)", basePrice: 4.00, hasDouble: true },
@@ -56,20 +35,30 @@ let editingOrderKey = null;
 let isLocked = false;
 let adminPIN = "1234";
 let panzoomInstance = null;
-
-// Initialize cutoff time relative to today
+let db = null; // Defined here, connected safely later
 let cutoffDate = new Date();
-if (new Date().getHours() >= 11 && new Date().getMinutes() > 30) {
-  cutoffDate.setTime(Date.now() + 2 * 60 * 60 * 1000); // Set +2 hours if past 11:30 AM
-} else {
-  cutoffDate.setHours(11, 30, 0, 0);
-}
 
+// 1. BOOTSTRAP APP IMMEDIATELY
 function initApp() {
-  populateMenuSelect();
-  handleItemSelectChange();
-  startCountdownTimer();
-  initFirebaseListeners();
+  try {
+    // Ensure countdown targets the future
+    if (new Date().getHours() > 11 || (new Date().getHours() === 11 && new Date().getMinutes() >= 30)) {
+      cutoffDate.setDate(cutoffDate.getDate() + 1);
+    }
+    cutoffDate.setHours(11, 30, 0, 0);
+
+    const overlay = document.getElementById('form-locked-overlay');
+    if (overlay) overlay.classList.add('hidden');
+
+    populateMenuSelect();
+    handleItemSelectChange();
+    startCountdownTimer();
+    
+    // Connect to Firebase as the last step
+    initFirebase();
+  } catch (err) {
+    console.error("Critical Application UI Error:", err);
+  }
 }
 
 if (document.readyState === 'loading') {
@@ -78,32 +67,57 @@ if (document.readyState === 'loading') {
   initApp();
 }
 
-function initFirebaseListeners() {
-  db.ref('orders').on('value', (snapshot) => {
-    ordersMap = snapshot.val() || {};
-    renderOrders();
-  });
-
-  db.ref('menu').on('value', (snapshot) => {
-    const data = snapshot.val();
-    if (data) {
-      const parsedMenu = Array.isArray(data) ? data : Object.values(data);
-      if (parsedMenu && parsedMenu.length > 0) {
-        menu = parsedMenu;
-        populateMenuSelect();
-        handleItemSelectChange();
-        renderAdminMenuList();
-        return;
-      }
+// 2. SAFE FIREBASE INITIALIZATION
+function initFirebase() {
+  if (typeof firebase === 'undefined') {
+    console.warn("Firebase SDK blocked or not loaded. Running in local mode.");
+    return;
+  }
+  
+  try {
+    if (!firebase.apps.length) {
+      firebase.initializeApp({
+        apiKey: "AIzaSyDsqwJNqVHp7moMHka8dT0xllkEYioa2hg",
+        authDomain: "office-lunch-orders.firebaseapp.com",
+        databaseURL: "https://office-lunch-orders-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "office-lunch-orders",
+        storageBucket: "office-lunch-orders.firebasestorage.app",
+        messagingSenderId: "186331905102",
+        appId: "1:186331905102:web:b876c0fb394d4c36ad971f",
+        measurementId: "G-VGZV5SSE6Z"
+      });
     }
-    // Fallback if cloud menu is empty
-    menu = [...DEFAULT_MENU];
-    populateMenuSelect();
-    handleItemSelectChange();
-    renderAdminMenuList();
-  });
+    db = firebase.database();
+    
+    // Listeners
+    db.ref('orders').on('value', (snapshot) => {
+      ordersMap = snapshot.val() || {};
+      renderOrders();
+    });
+
+    db.ref('menu').on('value', (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const parsedMenu = Array.isArray(data) ? data : Object.values(data);
+        if (parsedMenu && parsedMenu.length > 0) {
+          menu = parsedMenu;
+          populateMenuSelect();
+          handleItemSelectChange();
+          renderAdminMenuList();
+          return;
+        }
+      }
+      menu = [...DEFAULT_MENU];
+      populateMenuSelect();
+      handleItemSelectChange();
+      renderAdminMenuList();
+    });
+  } catch (err) {
+    console.error("Firebase connection failed:", err);
+  }
 }
 
+// 3. UI FUNCTIONS
 function populateMenuSelect() {
   const select = document.getElementById('item-select');
   if (!select) return;
@@ -302,11 +316,13 @@ function submitFinalOrder() {
     timestamp: Date.now()
   };
 
-  if (editingOrderKey) {
-    db.ref(`orders/${editingOrderKey}`).set(updatedOrder);
-    editingOrderKey = null;
-  } else {
-    db.ref('orders').push(updatedOrder);
+  if (db) {
+    if (editingOrderKey) {
+      db.ref(`orders/${editingOrderKey}`).set(updatedOrder);
+      editingOrderKey = null;
+    } else {
+      db.ref('orders').push(updatedOrder);
+    }
   }
 
   currentCart = [];
@@ -455,7 +471,7 @@ function renderDistributionView() {
 
 function deleteOrder(key) {
   if (confirm("Remove this order?")) {
-    db.ref(`orders/${key}`).remove();
+    if (db) db.ref(`orders/${key}`).remove();
     if (editingOrderKey === key) {
       editingOrderKey = null;
     }
@@ -498,6 +514,8 @@ function startCountdownTimer() {
     const secs = Math.floor((diff % (1000 * 60)) / 1000).toString().padStart(2, '0');
 
     document.getElementById('timer-display').textContent = `${hrs}:${mins}:${secs}`;
+    document.getElementById('form-locked-overlay').classList.add('hidden');
+    isLocked = false;
   }, 1000);
 }
 
@@ -607,7 +625,7 @@ function saveAdminMenuItem() {
     menu.push({ id: Date.now(), category, name, basePrice, hasDouble, isFries });
   }
 
-  db.ref('menu').set(menu);
+  if (db) db.ref('menu').set(menu);
 
   populateMenuSelect();
   handleItemSelectChange();
@@ -618,7 +636,7 @@ function saveAdminMenuItem() {
 function deleteAdminMenuItem(id) {
   if (confirm("Delete this menu item?")) {
     menu = menu.filter(m => m && m.id !== id);
-    db.ref('menu').set(menu);
+    if (db) db.ref('menu').set(menu);
 
     populateMenuSelect();
     handleItemSelectChange();
@@ -638,7 +656,7 @@ function resetAdminMenuForm() {
 function resetMenuToDefault() {
   if (confirm("Reset menu items back to default?")) {
     menu = [...DEFAULT_MENU];
-    db.ref('menu').set(menu);
+    if (db) db.ref('menu').set(menu);
 
     populateMenuSelect();
     handleItemSelectChange();
@@ -668,7 +686,7 @@ function toggleFormLock() {
 
 function clearAllOrders() {
   if (confirm("Are you sure you want to clear all orders?")) {
-    db.ref('orders').set(null);
+    if (db) db.ref('orders').set(null);
     closeAdminModal();
   }
 }
@@ -693,7 +711,7 @@ function copyPhoneScript() {
   }
 }
 
-// BIND ALL FUNCTIONS TO GLOBAL WINDOW OBJECT
+// Global scope bindings
 window.handleItemSelectChange = handleItemSelectChange;
 window.updateItemPricePreview = updateItemPricePreview;
 window.adjustQty = adjustQty;

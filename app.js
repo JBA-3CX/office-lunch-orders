@@ -252,7 +252,6 @@ function submitFinalOrder() {
   currentCart = [];
   renderCart();
 
-  // Visual button feedback (turns green with checkmark)
   const submitBtn = document.querySelector("button[onclick='submitFinalOrder()']");
   if (submitBtn) {
     const originalHTML = submitBtn.innerHTML;
@@ -291,7 +290,7 @@ function renderPhoneView() {
     return;
   }
 
-  const aggregated = {};
+  const groupedMap = {};
 
   orderList.forEach(order => {
     if (!order.items) return;
@@ -299,33 +298,51 @@ function renderPhoneView() {
       totalCount += item.qty;
       grandTotal += item.totalPrice;
 
-      const key = `${item.itemName} (${item.size})`;
-      if (!aggregated[key]) {
-        aggregated[key] = { name: item.itemName, size: item.size, totalQty: 0, details: [] };
+      const extrasStr = (item.extras && item.extras.length) ? item.extras.join(', ') : '';
+      const commentStr = item.comment ? item.comment : '';
+      const groupKey = `${item.itemName}||${item.size}||${extrasStr}||${commentStr}`;
+
+      if (!groupedMap[groupKey]) {
+        groupedMap[groupKey] = {
+          itemName: item.itemName,
+          size: item.size,
+          extras: extrasStr,
+          comment: commentStr,
+          totalQty: 0,
+          people: []
+        };
       }
 
-      aggregated[key].totalQty += item.qty;
-      
-      let note = `${order.person}: ${item.qty}x`;
-      if (item.extras && item.extras.length) note += ` +${item.extras.join(',')}`;
-      if (item.comment) note += ` (${item.comment})`;
-      aggregated[key].details.push(note);
+      groupedMap[groupKey].totalQty += item.qty;
+      groupedMap[groupKey].people.push(order.person);
     });
   });
 
-  Object.keys(aggregated).forEach(key => {
-    const group = aggregated[key];
+  Object.values(groupedMap).forEach(group => {
     const card = document.createElement('div');
-    card.className = "p-3 bg-slate-900/80 border border-slate-700/80 rounded-xl";
+    card.className = "p-3 bg-slate-900/80 border border-slate-700/80 rounded-xl space-y-1";
+
+    let lineText = `<span class="font-bold text-sm text-slate-100">${group.totalQty}x ${group.itemName} (${group.size})</span>`;
+
+    if (group.extras) {
+      lineText += ` <span class="text-amber-400 font-semibold text-xs">+ ${group.extras}</span>`;
+    }
+
+    if (group.comment) {
+      lineText += ` <span class="text-red-400 font-extrabold text-xs tracking-wide"> - ${group.comment}</span>`;
+    }
+
+    const peopleList = group.people.join(', ');
+
     card.innerHTML = `
-      <div class="flex items-center justify-between mb-1">
-        <label class="flex items-center gap-2 cursor-pointer">
-          <input type="checkbox" class="w-4 h-4 text-amber-500 bg-slate-800 border-slate-700 rounded focus:ring-0 accent-amber-500">
-          <span class="font-bold text-sm text-slate-200">${group.totalQty}x ${key}</span>
+      <div class="flex items-start justify-between gap-2">
+        <label class="flex items-start gap-2.5 cursor-pointer">
+          <input type="checkbox" class="w-4 h-4 text-amber-500 bg-slate-800 border-slate-700 rounded focus:ring-0 accent-amber-500 mt-0.5">
+          <div>
+            <div>${lineText}</div>
+            <div class="text-[11px] text-slate-400 mt-0.5">For: ${peopleList}</div>
+          </div>
         </label>
-      </div>
-      <div class="pl-6 text-xs text-slate-400 space-y-0.5">
-        ${group.details.map(d => `<div>• ${d}</div>`).join('')}
       </div>
     `;
     container.appendChild(card);

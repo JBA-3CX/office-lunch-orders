@@ -216,9 +216,13 @@ function removeFromCart(index) {
 }
 
 function submitFinalOrder() {
-  const userName = document.getElementById('user-name').value.trim();
+  const nameInput = document.getElementById('user-name');
+  const userName = nameInput.value.trim();
+  
   if (!userName) {
-    alert("Please enter your name before submitting!");
+    nameInput.focus();
+    nameInput.classList.add('ring-2', 'ring-red-500');
+    setTimeout(() => nameInput.classList.remove('ring-2', 'ring-red-500'), 2000);
     return;
   }
 
@@ -231,7 +235,6 @@ function submitFinalOrder() {
   }
 
   if (currentCart.length === 0) {
-    alert("Please select an item to order!");
     return;
   }
 
@@ -248,7 +251,23 @@ function submitFinalOrder() {
 
   currentCart = [];
   renderCart();
-  alert("Order submitted! Synced across all computers.");
+
+  // Visual button feedback (turns green with checkmark)
+  const submitBtn = document.querySelector("button[onclick='submitFinalOrder()']");
+  if (submitBtn) {
+    const originalHTML = submitBtn.innerHTML;
+    const originalClasses = submitBtn.className;
+
+    submitBtn.innerHTML = `<i class="fa-solid fa-circle-check"></i> Submitted!`;
+    submitBtn.className = "w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-extrabold py-3.5 px-4 rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-base";
+    submitBtn.disabled = true;
+
+    setTimeout(() => {
+      submitBtn.innerHTML = originalHTML;
+      submitBtn.className = originalClasses;
+      submitBtn.disabled = false;
+    }, 3000);
+  }
 }
 
 function renderOrders() {
@@ -463,7 +482,6 @@ function saveAdminMenuItem() {
   const isFries = document.getElementById('admin-is-fries').checked;
 
   if (!name || isNaN(basePrice)) {
-    alert("Please provide a valid item name and base price.");
     return;
   }
 
@@ -486,7 +504,6 @@ function saveAdminMenuItem() {
   handleItemSelectChange();
   renderAdminMenuList();
   resetAdminMenuForm();
-  alert("Menu item saved!");
 }
 
 function deleteAdminMenuItem(id) {
@@ -521,7 +538,6 @@ function resetMenuToDefault() {
     populateMenuSelect();
     handleItemSelectChange();
     renderAdminMenuList();
-    alert("Menu reset!");
   }
 }
 
@@ -532,7 +548,6 @@ function updateCutoffTime() {
   cutoffDate.setHours(parseInt(h), parseInt(m), 0, 0);
   document.getElementById('cutoff-time-display').textContent = cutoffDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   document.getElementById('form-locked-overlay').classList.add('hidden');
-  alert("Cutoff time updated!");
 }
 
 function addTimerMinutes(mins) {
@@ -566,5 +581,4 @@ function copyPhoneScript() {
     notes.forEach(n => script += `  ${n.textContent}\n`);
   });
   navigator.clipboard.writeText(script);
-  alert("Order script copied to clipboard!");
 }

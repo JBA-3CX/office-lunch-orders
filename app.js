@@ -44,6 +44,8 @@ let ordersMap = {};
 let historyMap = {};
 let currentCart = [];
 let editingOrderKey = null;
+let editingCartIndex = null;
+let isSavingOrder = false;
 let isLocked = false;
 let adminPIN = "1234";
 let panzoomInstance = null;
@@ -238,6 +240,7 @@ function updateItemPricePreview() {
 }
 
 function addToCart() {
+  if (isSavingOrder) return;
   const select = document.getElementById('item-select');
   if (!select || !select.value) return;
 
@@ -247,6 +250,10 @@ function addToCart() {
 
   const sizeSelect = document.getElementById('size-select');
   const selectedSize = sizeSelect.value;
+  if (sizeSelect.selectedIndex < 0) {
+    alert('Please select an available size before saving this item.');
+    return;
+  }
   const basePrice = parseFloat(sizeSelect.options[sizeSelect.selectedIndex].getAttribute('data-price'));
   const qty = parseInt(document.getElementById('item-qty').value);
   
@@ -255,7 +262,7 @@ function addToCart() {
 
   const itemTotal = (basePrice + (selectedExtras.length * 0.50)) * qty;
 
-  currentCart.push({
+  const cartItem = {
     itemId,
     itemName: item.name,
     size: selectedSize,
@@ -263,14 +270,45 @@ function addToCart() {
     extras: selectedExtras,
     comment,
     totalPrice: itemTotal
-  });
-
-  document.getElementById('item-comment').value = '';
-  document.querySelectorAll('input[name="extra"]').forEach(cb => cb.checked = false);
-  document.getElementById('item-qty').value = 1;
+  };
+  if (editingCartIndex === null) currentCart.push(cartItem);
+  else currentCart[editingCartIndex] = cartItem;
+  resetItemEditor();
 
   renderCart();
   updateItemPricePreview();
+}
+
+function resetItemEditor() {
+  if (isSavingOrder) return;
+  editingCartIndex = null;
+  document.getElementById('item-comment').value = '';
+  document.getElementById('item-qty').value = 1;
+  document.querySelectorAll('input[name="extra"]').forEach(cb => cb.checked = false);
+  handleItemSelectChange();
+  document.getElementById('add-item-btn').innerHTML = '<i class="fa-solid fa-plus text-amber-400"></i> Add Item to Order';
+  document.getElementById('cancel-item-edit-btn').classList.add('hidden');
+}
+
+function editCartItem(index) {
+  if (isSavingOrder) return;
+  const item = currentCart[index];
+  if (!item) return;
+  if (!menu.some(m => m && m.id === item.itemId)) {
+    alert('This item is no longer on the menu. Remove it and add a replacement.');
+    return;
+  }
+  editingCartIndex = index;
+  document.getElementById('item-select').value = item.itemId;
+  handleItemSelectChange();
+  document.getElementById('size-select').value = item.size;
+  document.getElementById('item-qty').value = item.qty;
+  document.getElementById('item-comment').value = item.comment || '';
+  document.querySelectorAll('input[name="extra"]').forEach(cb => cb.checked = (item.extras || []).includes(cb.value));
+  document.getElementById('add-item-btn').innerHTML = '<i class="fa-solid fa-check"></i> Update Item';
+  document.getElementById('cancel-item-edit-btn').classList.remove('hidden');
+  updateItemPricePreview();
+  document.getElementById('item-select').focus();
 }
 
 function renderCart() {
@@ -294,12 +332,13 @@ function renderCart() {
     div.innerHTML = `
       <div>
         <span class="font-bold text-slate-200">${c.qty}x ${c.itemName} (${c.size})</span>
-        ${c.extras.length ? `<span class="text-amber-400 block">+ ${c.extras.join(', ')}</span>` : ''}
+        ${c.extras && c.extras.length ? `<span class="text-amber-400 block">+ ${c.extras.join(', ')}</span>` : ''}
         ${c.comment ? `<span class="text-slate-400 italic block">"${c.comment}"</span>` : ''}
       </div>
       <div class="flex items-center gap-2">
         <span class="font-bold text-amber-400">€${c.totalPrice.toFixed(2)}</span>
-        <button onclick="removeFromCart(${index})" class="text-slate-500 hover:text-red-400 px-1"><i class="fa-solid fa-trash"></i></button>
+        <button type="button" onclick="editCartItem(${index})" aria-label="Edit item" class="text-slate-400 hover:text-amber-400 px-1"><i class="fa-solid fa-pen"></i></button>
+        <button type="button" onclick="removeFromCart(${index})" aria-label="Remove item" class="text-slate-500 hover:text-red-400 px-1"><i class="fa-solid fa-trash"></i></button>
       </div>
     `;
     itemsList.appendChild(div);
@@ -309,18 +348,25 @@ function renderCart() {
 }
 
 function removeFromCart(index) {
+  if (isSavingOrder) return;
+  if (editingCartIndex === index) resetItemEditor();
+  else if (editingCartIndex !== null && index < editingCartIndex) editingCartIndex--;
   currentCart.splice(index, 1);
   renderCart();
 }
 
 function editSubmittedOrder(key) {
+  if (isSavingOrder || isLocked) return;
   const order = ordersMap[key];
   if (!order) return;
+  document.getElementById('order-status').textContent = '';
 
   editingOrderKey = key;
+  resetItemEditor();
   document.getElementById('user-name').value = order.person || '';
-  currentCart = order.items ? JSON.parse(JSON.stringify(order.items)) : [];
+  currentCart = order.items ? JSON.parse(JSON.stringify(order.items)).map(item => ({ ...item, extras: item.extras || [] })) : [];
   renderCart();
+  document.getElementById('cancel-order-edit-btn').classList.remove('hidden');
 
   document.getElementById('user-name').scrollIntoView({ behavior: 'smooth', block: 'center' });
   document.getElementById('user-name').focus();
@@ -332,7 +378,20 @@ function editSubmittedOrder(key) {
   }
 }
 
-function submitFinalOrder() {
+function cancelOrderEdit() {
+  if (isSavingOrder) return;
+  editingOrderKey = null;
+  currentCart = [];
+  resetItemEditor();
+  renderCart();
+  document.getElementById('user-name').value = '';
+  document.getElementById('cancel-order-edit-btn').classList.add('hidden');
+  document.querySelector("button[onclick='submitFinalOrder()']").innerHTML = '<i class="fa-solid fa-paper-plane"></i> Submit Final Order';
+}
+
+async function submitFinalOrder() {
+  if (isSavingOrder || isLocked) return;
+  document.getElementById('order-status').textContent = '';
   const nameInput = document.getElementById('user-name');
   const userName = nameInput.value.trim();
   
@@ -343,11 +402,17 @@ function submitFinalOrder() {
     return;
   }
 
-  if (currentCart.length === 0) {
+  if (editingCartIndex !== null) {
+    addToCart();
+    if (editingCartIndex !== null) return;
+  }
+
+  if (currentCart.length === 0 && !editingOrderKey) {
     addToCart();
   }
 
   if (currentCart.length === 0) {
+    alert('Add at least one item to your order.');
     return;
   }
 
@@ -357,36 +422,28 @@ function submitFinalOrder() {
     timestamp: Date.now()
   };
 
-  if (db) {
-    if (editingOrderKey) {
-      db.ref(`orders/${editingOrderKey}`).set(updatedOrder);
-      editingOrderKey = null;
-    } else {
-      db.ref('orders').push(updatedOrder);
-    }
-  } else {
+  if (!db) {
     alert("Connection to server still loading. Please try submitting again in 1 second.");
     return;
   }
-
-  currentCart = [];
-  renderCart();
-
   const submitBtn = document.querySelector("button[onclick='submitFinalOrder()']");
-  if (submitBtn) {
-    const originalHTML = `<i class="fa-solid fa-paper-plane"></i> Submit Final Order`;
-    const originalClasses = "w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold py-3.5 px-4 rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-base";
-
-    submitBtn.innerHTML = `<i class="fa-solid fa-circle-check"></i> Submitted!`;
-    submitBtn.className = "w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-extrabold py-3.5 px-4 rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-base";
-    submitBtn.disabled = true;
-
-    setTimeout(() => {
-      submitBtn.innerHTML = originalHTML;
-      submitBtn.className = originalClasses;
-      submitBtn.disabled = false;
-      document.getElementById('user-name').value = '';
-    }, 3000);
+  const previousLabel = submitBtn.innerHTML;
+  isSavingOrder = true;
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving…';
+  try {
+    if (editingOrderKey) await db.ref(`orders/${editingOrderKey}`).set(updatedOrder);
+    else await db.ref('orders').push(updatedOrder);
+    isSavingOrder = false;
+    cancelOrderEdit();
+    document.getElementById('order-status').textContent = 'Order saved successfully.';
+  } catch (error) {
+    console.error('Order save failed', error);
+    submitBtn.innerHTML = previousLabel;
+    document.getElementById('order-status').textContent = 'Could not save your order. Your changes are still here. Please try again.';
+  } finally {
+    isSavingOrder = false;
+    submitBtn.disabled = false;
   }
 }
 
@@ -515,10 +572,11 @@ function renderDistributionView() {
 }
 
 function deleteOrder(key) {
+  if (isSavingOrder) return;
   if (confirm("Remove this order?")) {
     if (db) db.ref(`orders/${key}`).remove();
     if (editingOrderKey === key) {
-      editingOrderKey = null;
+      cancelOrderEdit();
     }
   }
 }

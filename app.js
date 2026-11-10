@@ -282,6 +282,7 @@ function addToCart() {
 function resetItemEditor() {
   if (isSavingOrder) return;
   editingCartIndex = null;
+  document.getElementById('item-editor-title').textContent = 'Select Item to Add';
   document.getElementById('item-comment').value = '';
   document.getElementById('item-qty').value = 1;
   document.querySelectorAll('input[name="extra"]').forEach(cb => cb.checked = false);
@@ -292,6 +293,12 @@ function resetItemEditor() {
 
 function editCartItem(index) {
   if (isSavingOrder) return;
+  if (editingCartIndex === index) return;
+  // Commit the previous line before reusing the shared item form.
+  if (editingCartIndex !== null) {
+    addToCart();
+    if (editingCartIndex !== null) return;
+  }
   const item = currentCart[index];
   if (!item) return;
   if (!menu.some(m => m && m.id === item.itemId)) {
@@ -299,6 +306,7 @@ function editCartItem(index) {
     return;
   }
   editingCartIndex = index;
+  document.getElementById('item-editor-title').textContent = `Editing line ${index + 1} — Update Item to keep your changes`;
   document.getElementById('item-select').value = item.itemId;
   handleItemSelectChange();
   document.getElementById('size-select').value = item.size;
@@ -309,6 +317,7 @@ function editCartItem(index) {
   document.getElementById('cancel-item-edit-btn').classList.remove('hidden');
   updateItemPricePreview();
   document.getElementById('item-select').focus();
+  document.getElementById('item-select').scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
 function renderCart() {
@@ -337,7 +346,7 @@ function renderCart() {
       </div>
       <div class="flex items-center gap-2">
         <span class="font-bold text-amber-400">€${c.totalPrice.toFixed(2)}</span>
-        <button type="button" onclick="editCartItem(${index})" aria-label="Edit item" class="text-slate-400 hover:text-amber-400 px-1"><i class="fa-solid fa-pen"></i></button>
+        <button type="button" onclick="editCartItem(${index})" aria-label="Edit line ${index + 1}" class="text-amber-400 border border-slate-600 rounded px-2 py-2 whitespace-nowrap"><i class="fa-solid fa-pen"></i> Edit</button>
         <button type="button" onclick="removeFromCart(${index})" aria-label="Remove item" class="text-slate-500 hover:text-red-400 px-1"><i class="fa-solid fa-trash"></i></button>
       </div>
     `;
@@ -356,7 +365,11 @@ function removeFromCart(index) {
 }
 
 function editSubmittedOrder(key) {
-  if (isSavingOrder || isLocked) return;
+  if (isSavingOrder) return;
+  if (isLocked) {
+    alert(`Ordering is closed. Existing orders cannot be edited after the ${globalConfig.cutoffTime} cutoff. Ask the administrator to reopen ordering if a change is needed.`);
+    return;
+  }
   const order = ordersMap[key];
   if (!order) return;
   document.getElementById('order-status').textContent = '';
@@ -367,8 +380,9 @@ function editSubmittedOrder(key) {
   currentCart = order.items ? JSON.parse(JSON.stringify(order.items)).map(item => ({ ...item, extras: item.extras || [] })) : [];
   renderCart();
   document.getElementById('cancel-order-edit-btn').classList.remove('hidden');
+  document.getElementById('order-edit-notice').classList.remove('hidden');
 
-  document.getElementById('user-name').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  document.getElementById('cart-container').scrollIntoView({ behavior: 'smooth', block: 'center' });
   document.getElementById('user-name').focus();
 
   const submitBtn = document.querySelector("button[onclick='submitFinalOrder()']");
@@ -386,11 +400,16 @@ function cancelOrderEdit() {
   renderCart();
   document.getElementById('user-name').value = '';
   document.getElementById('cancel-order-edit-btn').classList.add('hidden');
+  document.getElementById('order-edit-notice').classList.add('hidden');
   document.querySelector("button[onclick='submitFinalOrder()']").innerHTML = '<i class="fa-solid fa-paper-plane"></i> Submit Final Order';
 }
 
 async function submitFinalOrder() {
-  if (isSavingOrder || isLocked) return;
+  if (isSavingOrder) return;
+  if (isLocked) {
+    alert('Ordering is closed. Your changes have not been saved. Ask the administrator to reopen ordering.');
+    return;
+  }
   document.getElementById('order-status').textContent = '';
   const nameInput = document.getElementById('user-name');
   const userName = nameInput.value.trim();

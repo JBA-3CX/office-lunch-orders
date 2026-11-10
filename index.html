@@ -87,9 +87,19 @@
           <input type="text" id="user-name" placeholder="Enter your full name" class="w-full bg-slate-900/80 border border-slate-700/80 text-white rounded-lg px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none">
         </div>
 
+        <div id="cart-container" class="mb-5 hidden">
+          <p id="order-edit-notice" class="hidden text-sm text-amber-400 mb-3">Editing a saved order. Click Edit beside a line to change it, then use Update Saved Order to save all lines.</p>
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Items in your order:</h3>
+          <div id="cart-items" class="space-y-2 mb-3"></div>
+          <div class="flex justify-between items-center p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg text-sm font-bold text-amber-400">
+            <span>Total Order Amount:</span>
+            <span id="cart-total-price">€0.00</span>
+          </div>
+        </div>
+
         <!-- Item Selector Box -->
         <div class="bg-slate-900/60 rounded-xl p-4 border border-slate-800 mb-5 space-y-4">
-          <div class="font-semibold text-xs text-amber-400 uppercase tracking-wider">Select Item to Add</div>
+          <div id="item-editor-title" class="font-semibold text-xs text-amber-400 uppercase tracking-wider">Select Item to Add</div>
           
           <div>
             <label class="block text-xs font-medium text-slate-300 mb-1">Menu Item</label>
@@ -153,15 +163,6 @@
             <button id="add-item-btn" type="button" onclick="addToCart()" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white text-xs font-bold px-4 py-2.5 rounded-lg shadow-sm transition flex items-center gap-2">
               <i class="fa-solid fa-plus text-amber-400"></i> Add Item to Order
             </button>
-          </div>
-        </div>
-
-        <div id="cart-container" class="mb-5 hidden">
-          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Items in your order:</h3>
-          <div id="cart-items" class="space-y-2 mb-3"></div>
-          <div class="flex justify-between items-center p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg text-sm font-bold text-amber-400">
-            <span>Total Order Amount:</span>
-            <span id="cart-total-price">€0.00</span>
           </div>
         </div>
 

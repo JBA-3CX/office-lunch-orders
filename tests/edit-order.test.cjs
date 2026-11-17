@@ -164,3 +164,35 @@ test('cutoff reached during editing keeps draft and prevents saving', async () =
   assert.equal(a.run('currentCart.length'), 2);
   assert.match(a.alerts[0], /changes have not been saved/);
 });
+
+test('archive Copy includes every line, size, extras and instructions without changing orders', async () => {
+  const a = app();
+  a.run("historyMap = { '2026-11-16': JSON.parse(JSON.stringify(ordersMap)) }");
+  const before = a.run('JSON.stringify({ historyMap, ordersMap })');
+  let copied;
+  a.context.navigator = { clipboard: { writeText: async text => { copied = text; } } };
+  const button = a.element('archive-copy');
+  button.innerHTML = 'Copy';
+  a.context.copyButton = button;
+  await a.run("copyHistory('2026-11-16', copyButton)");
+  assert.match(copied, /Archived Orders for 2026-11-16/);
+  assert.match(copied, /Joe:/);
+  assert.match(copied, /2x Sandwich \(Double\) \(No tomato\)/);
+  assert.match(copied, /1x Fries \(Large\) \(\+Cheese\)/);
+  assert.match(button.innerHTML, /Copied!/);
+  assert.equal(a.run('JSON.stringify({ historyMap, ordersMap })'), before);
+});
+
+test('blocked clipboard offers archive text for manual copying', async () => {
+  const a = app();
+  a.run("historyMap = { '2026-11-16': ordersMap }");
+  a.context.navigator = { clipboard: { writeText: async () => { throw new Error('Blocked'); } } };
+  let manualText;
+  a.context.prompt = (message, text) => { manualText = text; };
+  const button = a.element('archive-copy');
+  a.context.copyButton = button;
+  await a.run("copyHistory('2026-11-16', copyButton)");
+  assert.match(manualText, /Joe:/);
+  assert.match(manualText, /Fries/);
+  assert.equal(button.disabled, false);
+});

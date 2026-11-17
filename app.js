@@ -803,7 +803,8 @@ function renderAdminHistory() {
     div.innerHTML = `
       <div><span class="font-bold text-slate-200">${date}</span> <span class="text-slate-400 ml-2">(${orderCount} people)</span></div>
       <div class="flex gap-2">
-        <button onclick="viewHistory('${date}')" class="text-slate-400 hover:text-amber-400 px-1"><i class="fa-solid fa-eye"></i></button>
+        <button type="button" onclick="copyHistory('${date}', this)" title="Copy archived orders" class="text-amber-400 hover:text-amber-300 px-1 whitespace-nowrap"><i class="fa-regular fa-copy"></i> Copy</button>
+        <button onclick="viewHistory('${date}')" title="View archived orders" class="text-slate-400 hover:text-amber-400 px-1"><i class="fa-solid fa-eye"></i></button>
         <button onclick="deleteHistory('${date}')" class="text-slate-400 hover:text-red-400 px-1"><i class="fa-solid fa-trash"></i></button>
       </div>
     `;
@@ -811,20 +812,48 @@ function renderAdminHistory() {
   });
 }
 
-function viewHistory(date) {
+function formatHistory(date) {
   const orders = historyMap[date];
+  if (!orders) return '';
   let text = `--- Archived Orders for ${date} ---\n\n`;
   Object.values(orders).forEach(o => {
       text += `👤 ${o.person}:\n`;
-      o.items.forEach(i => {
+      (o.items || []).forEach(i => {
           text += `   - ${i.qty}x ${i.itemName}`;
+          if (i.size) text += ` (${i.size})`;
           if (i.extras && i.extras.length) text += ` (+${i.extras.join(', ')})`;
           if (i.comment) text += ` (${i.comment})`;
           text += `\n`;
       });
       text += '\n';
   });
-  alert(text);
+  return text.trim();
+}
+
+function viewHistory(date) {
+  const text = formatHistory(date);
+  if (text) alert(text);
+}
+
+async function copyHistory(date, button) {
+  const text = formatHistory(date);
+  if (!text) {
+    alert('This archive is no longer available.');
+    return;
+  }
+  const originalHTML = button ? button.innerHTML : '';
+  if (button) button.disabled = true;
+  try {
+    await navigator.clipboard.writeText(text);
+    if (button) {
+      button.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+      setTimeout(() => { button.innerHTML = originalHTML; button.disabled = false; }, 2000);
+    }
+  } catch (error) {
+    if (button) button.disabled = false;
+    // Local-file previews and browsers with clipboard access blocked can still copy manually.
+    prompt('Copy the archived orders below (Ctrl+C):', text);
+  }
 }
 
 function deleteHistory(date) {
@@ -880,5 +909,6 @@ window.updateCutoffTime = updateCutoffTime;
 window.toggleFormLock = toggleFormLock;
 window.clearAllOrders = clearAllOrders;
 window.viewHistory = viewHistory;
+window.copyHistory = copyHistory;
 window.deleteHistory = deleteHistory;
 window.copyPhoneScript = copyPhoneScript;
